@@ -271,7 +271,7 @@ def parse(toks):
                             break
                         i+=1
             elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
-                if getVARIABLE(toks[i+1][7:-1]) == getVARIABLE(toks[i+3][7:]):
+                if getVARIABLE(toks[i+1][7:]) == getVARIABLE(toks[i+3][7:]):
                     i+=5
                 else:
                     prevState = 0
