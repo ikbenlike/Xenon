@@ -7,6 +7,7 @@ symbols = {}
 functions = {}
 
 def open_file(filename):
+    print("opening " + filename)
     data = open(filename, "r").read()
     data += "<EOF>"
     return data
@@ -15,15 +16,16 @@ def lex(filecontents):
     filecontents = list(filecontents)
     tok = ""
     expr = ""
-    isexpr = 0
-    state = 0
-    varstarted = 0
     var = ""
     string = ""
     func = ""
-    namespace = ""
+    use = ""
+    isexpr = 0
+    state = 0
+    varstarted = 0
     funcstarted = 0
     namestarted = 0
+    usestarted = 0
     for char in filecontents:
         tok += char
         if tok == " ":
@@ -31,6 +33,18 @@ def lex(filecontents):
                 tok = ""
             else:
                 tok = " "
+        elif tok == "use":
+            usestarted = 1
+            use += tok
+            tok = ""
+        elif usestarted == 1:
+            if tok == "\n":
+                if use != "":
+                    tokens.append("USE:" + use.replace("\n", ""))
+                    use = ""
+                    usestarted = 0
+            use += tok
+            tok = ""
         elif tok == "\n" or tok == "<EOF>" or tok == "{":
             if expr != "" and isexpr == 1:
                 tokens.append("EXPR:" + expr)
@@ -49,6 +63,10 @@ def lex(filecontents):
                     tokens.append("PASS")
                 funcstarted = 0
                 func = ""
+            elif use != "" and usestarted == 1:
+                tokens.append("USE:" + use.replace("\n", ""))
+                usestarted = 0
+                use = ""
             if tok == "{":
                 tokens.append("{")
             tok = ""
@@ -173,7 +191,6 @@ def getFUNCTION(functionname):
 
 def getVARIABLE(varname):
     if varname in symbols:
-        print(symbols)
         return symbols[varname]
     else:
         print("VARIABLE ERROR: undefined variable " + varname)
@@ -198,6 +215,11 @@ def parse(toks):
             break
         if toks[i] == "EXIT":
             exit()
+        if toks[i][0:3] == "USE":
+            print("use")
+            newData = open_file(toks[i][7:] + ".pxe")
+            newToks = lex(newData)
+            i+=1
         elif toks[i][0:4] == "FUNC" and toks[i+1] == "{":
             funcToDoName = toks[i][9:]
             while(toks[i] != ";}"):
@@ -325,9 +347,8 @@ def parse(toks):
             prevState = 0
         elif toks[i] == "ELSE" and prevState == 0:
             i+=1
-        #print(prevState)
-            #i+=5
-    #print(symbols)
+    print(symbols)
+    print(functions)
 
 def run():
     data = open_file(argv[1])
