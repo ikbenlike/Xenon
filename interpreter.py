@@ -9,7 +9,7 @@ functions = {}
 def open_file(filename):
     print("opening " + filename)
     data = open(filename, "r").read()
-    data += "<EOF>"
+    data += "!!EOF!!"
     return data
 
 def lex(filecontents):
@@ -45,7 +45,7 @@ def lex(filecontents):
                     usestarted = 0
             use += tok
             tok = ""
-        elif tok == "\n" or tok == "<EOF>" or tok == "{":
+        elif tok == "\n" or tok == "!!EOF!!" or tok == "{" or tok == "&":
             if expr != "" and isexpr == 1:
                 tokens.append("EXPR:" + expr)
                 expr = ""
@@ -69,6 +69,8 @@ def lex(filecontents):
                 use = ""
             if tok == "{":
                 tokens.append("{")
+            elif tok == "&":
+                tokens.append("CONCAT")
             tok = ""
         elif tok == "=" and state == 0:
             if expr != "" and isexpr == 0:
@@ -257,456 +259,573 @@ def getINPUT(string, varname):
 def parse(toks):
     i = 0
     prevState = 1
+    loopStarted = 0
     funcToDo = ""
     funcToDo = []
     while(i < len(toks)):
-        if toks[i] == "}":
-            i+=1
         try:
-            if toks[i] == "{":
+            if toks[i] == "}":
                 i+=1
-        except IndexError:
-            break
-        if toks[i] == "EXIT":
-            exit()
-        if toks[i][0:3] == "USE":
-            print("use")
-            newData = open_file(toks[i][7:] + ".pxe")
-            newToks = lex(newData)
-            i+=1
-        elif toks[i][0:4] == "FUNC" and toks[i+1] == "{":
-            funcToDoName = toks[i][9:]
-            while(toks[i] != ";}"):
+            try:
+                if toks[i] == "{":
+                    i+=1
+            except IndexError:
+                break
+            if toks[i] == "EXIT":
+                exit()
+            if toks[i][0:3] == "USE":
+                print("use")
+                newData = open_file(toks[i][7:] + ".pxe")
+                newToks = lex(newData)
                 i+=1
-                if toks[i] == ";}":
+            elif toks[i][0:4] == "FUNC" and toks[i+1] == "{":
+                funcToDoName = toks[i][9:]
+                while(toks[i] != ";}"):
+                    i+=1
+                    if toks[i] == ";}":
+                        funcToDo.append(toks[i])
+                        doFUNCTION(funcToDoName, funcToDo)
+                        funcToDo = []
+                        funcToDoName = ""
+                        break
                     funcToDo.append(toks[i])
-                    doFUNCTION(funcToDoName, funcToDo)
-                    funcToDo = []
-                    funcToDoName = ""
-                    break
-                funcToDo.append(toks[i])
-            i+=1
-        elif toks[i][0:4] == "FUNC" and toks[i+1] != "{":
-            parse(getFUNCTION(toks[i][9:]))
-            i+=2
-        elif toks[i] == "PASS":
-            i+=1
-        elif toks[i][0:4] == "NAME":
-            i+=1
-        elif toks[i] == "PRINT":
-            if toks[i] + " " + toks[i+1][0:6] == "PRINT STRING" or toks[i] + " " + toks[i+1][0:3] == "PRINT NUM" or toks[i] + " " + toks[i+1][0:4] == "PRINT EXPR" or toks[i] + " " + toks[i+1][0:3] == "PRINT VAR" or toks[i] + " " + toks[i+1][0:4] == "PRINT BOOL":
-                if toks[i+1][0:6] == "STRING":
-                    print(toks[i+1][8:-1])
-                elif toks[i+1][0:3] == "NUM":
-                    print(toks[i+1][4:])
-                elif toks[i+1][0:4] == "EXPR":
-                    print(eval(toks[i+1][5:]))
-                elif toks[i+1][0:4] == "BOOL":
-                    print(toks[i+1][5:])
-                elif toks[i+1][0:3] == "VAR":
-                    varToPrint = getVARIABLE(toks[i+1][7:])
-                    if varToPrint[0:6] == "STRING":
-                        print(varToPrint[8:-1])
-                    elif varToPrint[0:3] == "NUM":
-                        print(varToPrint[4:])
-                    elif varToPrint[0:4] == "BOOL":
-                        print(varToPrint[5:])
-            i += 2
-        elif toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:6] == "VAR EQUALS STRING" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "VAR EQUALS NUM" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "VAR EQUALS EXPR" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "VAR EQUALS VAR" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "VAR EQUALS BOOL":
-            if toks[i+2][0:4] == "EXPR":
-                doASSIGN(toks[i][7:], "NUM:" + str(eval(toks[i+2][5:])))
-            elif toks[i+2][0:3] == "NUM":
-                doASSIGN(toks[i][7:], toks[i+2])
-            elif toks[i+2][0:6] == "STRING":
-                doASSIGN(toks[i][7:], toks[i+2])
-            elif toks[i+2][0:3] == "VAR":
-                doASSIGN(toks[i][7:], getVARIABLE(toks[i+2][7:]))
-            elif toks[i+2][0:4] == "BOOL":
-                doASSIGN(toks[i][7:], toks[i+2])
-            i+=3
-        elif toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2][0:3] == "INPUT STRING VAR":
-            getINPUT(toks[i+1][7:], toks[i+2][4:])
-            i+=3
-        elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL IS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM IS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR IS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING IS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR IS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR IS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM IS EXPR {":
-            if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
-                if toks[i+1][4:] == toks[i+3][4:]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
-                if toks[i+1][8:-1] == toks[i+3][8:-1]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
-                if getVARIABLE(toks[i+1][7:]) == getVARIABLE(toks[i+3][7:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
-                if toks[i+1][5:] == toks[i+3][5:]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
-                if eval(toks[i+1][5:]) == eval(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
-                t = eval(toks[i+1][6:])
-                if str(t) == str(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
-                t = eval(toks[i+1][5:])
-                if str(t) == str(toks[i+1][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-        elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL NOT BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM NOT NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR NOT VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING NOT STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR NOT EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR NOT NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM NOT EXPR {":
-            if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
-                if toks[i+1][4:] != toks[i+3][4:]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
-                if toks[i+1][8:-1] != toks[i+3][8:-1]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
-                if getVARIABLE(toks[i+1][7:]) != getVARIABLE(toks[i+3][7:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
-                if toks[i+1][5:] != toks[i+3][5:]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
-                if eval(toks[i+1][5:]) != eval(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
-                t = eval(toks[i+1][6:])
-                if str(t) != str(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
-                t = eval(toks[i+1][5:])
-                if str(t) != str(toks[i+1][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-        elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL GREATERIS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM GREATERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR GREATERIS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING GREATERIS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR GREATERIS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR GREATERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM GREATERIS EXPR {":
-            if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
-                if int(toks[i+1][4:]) >= int(toks[i+3][4:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
-                if toks[i+1][8:-1] >= toks[i+3][8:-1]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
-                if getVARIABLE(toks[i+1][7:]) >= getVARIABLE(toks[i+3][7:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
-                print("ILLEGAL OPERATION ON TYPE BOOLEAN: you can't compare the size of booleans with each other")
-                exit()
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
-                if eval(toks[i+1][5:]) >= eval(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
-                t = eval(toks[i+1][6:])
-                if int(t) >= int(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
-                t = eval(toks[i+1][5:])
-                if int(t) >= int(toks[i+1][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-        elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL SMALLERIS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM SMALLERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR SMALLERIS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING SMALLERIS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR SMALLERIS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR SMALLERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM SMALLERIS EXPR {":
-            if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
-                if int(toks[i+1][4:]) <= int(toks[i+3][4:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
-                if toks[i+1][8:-1] <= toks[i+3][8:-1]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
-                if getVARIABLE(toks[i+1][7:]) <= getVARIABLE(toks[i+3][7:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
-                print("ILLEGAL OPERATION ON TYPE BOOLEAN: you can't compare the size of booleans with each other")
-                exit()
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
-                if eval(toks[i+1][5:]) <= eval(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
-                t = eval(toks[i+1][6:])
-                if int(t) <= int(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
-                t = eval(toks[i+1][5:])
-                if int(t) <= int(toks[i+1][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-        elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL SMALLER BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM SMALLER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR SMALLER VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING SMALLER STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR SMALLER EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR SMALLER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM SMALLER EXPR {":
-            if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
-                if int(toks[i+1][4:]) < int(toks[i+3][4:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
-                if toks[i+1][8:-1] < toks[i+3][8:-1]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
-                if getVARIABLE(toks[i+1][7:]) < getVARIABLE(toks[i+3][7:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
-                print("ILLEGAL OPERATION ON TYPE BOOLEAN: you can't compare the size of booleans with each other")
-                exit()
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
-                if eval(toks[i+1][5:]) < eval(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
-                t = eval(toks[i+1][6:])
-                if int(t) < int(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
-                t = eval(toks[i+1][5:])
-                if int(t) < int(toks[i+1][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-        elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL GREATER BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM GREATER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR GREATER VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING GREATER STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR GREATER EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR GREATER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM GREATER EXPR {":
-            if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
-                if int(toks[i+1][4:]) > int(toks[i+3][4:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
-                if toks[i+1][8:-1] > toks[i+3][8:-1]:
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
-                if getVARIABLE(toks[i+1][7:]) > getVARIABLE(toks[i+3][7:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
-                print("ILLEGAL OPERATION ON TYPE BOOLEAN: you can't compare the size of booleans with each other")
-                exit()
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
-                if eval(toks[i+1][5:]) > eval(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
-                t = eval(toks[i+1][6:])
-                if int(t) > int(toks[i+3][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-            elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
-                t = eval(toks[i+1][5:])
-                if int(t) > int(toks[i+1][5:]):
-                    i+=5
-                else:
-                    prevState = 0
-                    while(toks[i] != "}"):
-                        if toks[i] == "}":
-                            break
-                        i+=1
-        elif toks[i] == "ELSE" and prevState == 1:
-            while(toks[i] != "}"):
-                if toks[i] == "}":
-                    break
                 i+=1
-            prevState = 0
-        elif toks[i] == "ELSE" and prevState == 0:
-            i+=1
+            elif toks[i][0:4] == "FUNC" and toks[i+1] != "{":
+                parse(getFUNCTION(toks[i][9:]))
+                i+=2
+            elif toks[i] == "PASS":
+                i+=1
+            elif toks[i][0:4] == "NAME":
+                i+=1
+            elif toks[i] == "PRINT":
+                if toks[i] + " " + toks[i+1][0:6] == "PRINT STRING" or toks[i] + " " + toks[i+1][0:3] == "PRINT NUM" or toks[i] + " " + toks[i+1][0:4] == "PRINT EXPR" or toks[i] + " " + toks[i+1][0:3] == "PRINT VAR" or toks[i] + " " + toks[i+1][0:4] == "PRINT BOOL":
+                    if toks[i+1][0:6] == "STRING":
+                        print(toks[i+1][8:-1])
+                    elif toks[i+1][0:3] == "NUM":
+                        print(toks[i+1][4:])
+                    elif toks[i+1][0:4] == "EXPR":
+                        print(eval(toks[i+1][5:]))
+                    elif toks[i+1][0:4] == "BOOL":
+                        print(toks[i+1][5:])
+                    elif toks[i+1][0:3] == "VAR":
+                        varToPrint = getVARIABLE(toks[i+1][7:])
+                        if varToPrint[0:6] == "STRING":
+                            print(varToPrint[8:-1])
+                        elif varToPrint[0:3] == "NUM":
+                            print(varToPrint[4:])
+                        elif varToPrint[0:4] == "BOOL":
+                            print(varToPrint[5:])
+                i += 2
+            elif toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:6] == "VAR EQUALS STRING" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "VAR EQUALS NUM" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "VAR EQUALS EXPR" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "VAR EQUALS VAR" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "VAR EQUALS BOOL":
+                if toks[i+2][0:4] == "EXPR":
+                    doASSIGN(toks[i][7:], "NUM:" + str(eval(toks[i+2][5:])))
+                elif toks[i+2][0:3] == "NUM":
+                    doASSIGN(toks[i][7:], toks[i+2])
+                elif toks[i+2][0:6] == "STRING":
+                    doASSIGN(toks[i][7:], toks[i+2])
+                elif toks[i+2][0:3] == "VAR":
+                    doASSIGN(toks[i][7:], getVARIABLE(toks[i+2][7:]))
+                elif toks[i+2][0:4] == "BOOL":
+                    doASSIGN(toks[i][7:], toks[i+2])
+                i+=3
+            elif toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2][0:3] == "INPUT STRING VAR":
+                getINPUT(toks[i+1][7:], toks[i+2][4:])
+                i+=3
+            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL IS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM IS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR IS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING IS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR IS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR IS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM IS EXPR {":
+                if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
+                    if toks[i+1][4:] == toks[i+3][4:]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
+                    if toks[i+1][8:-1] == toks[i+3][8:-1]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
+                    if getVARIABLE(toks[i+1][7:]) == getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
+                    if toks[i+1][5:] == toks[i+3][5:]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
+                    if eval(toks[i+1][5:]) == eval(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
+                    t = eval(toks[i+1][6:])
+                    if str(t) == str(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
+                    t = eval(toks[i+1][5:])
+                    if str(t) == str(toks[i+1][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL NOT BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM NOT NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR NOT VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING NOT STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR NOT EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR NOT NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM NOT EXPR {":
+                if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
+                    if toks[i+1][4:] != toks[i+3][4:]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
+                    if toks[i+1][8:-1] != toks[i+3][8:-1]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
+                    if getVARIABLE(toks[i+1][7:]) != getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
+                    if toks[i+1][5:] != toks[i+3][5:]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
+                    if eval(toks[i+1][5:]) != eval(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
+                    t = eval(toks[i+1][6:])
+                    if str(t) != str(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
+                    t = eval(toks[i+1][5:])
+                    if str(t) != str(toks[i+1][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL GREATERIS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM GREATERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR GREATERIS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING GREATERIS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR GREATERIS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR GREATERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM GREATERIS EXPR {":
+                if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
+                    if int(toks[i+1][4:]) >= int(toks[i+3][4:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
+                    if toks[i+1][8:-1] >= toks[i+3][8:-1]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
+                    if getVARIABLE(toks[i+1][7:]) >= getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
+                    print("ILLEGAL OPERATION ON TYPE BOOLEAN: you can't compare the size of booleans with each other")
+                    exit()
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
+                    if eval(toks[i+1][5:]) >= eval(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
+                    t = eval(toks[i+1][6:])
+                    if int(t) >= int(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
+                    t = eval(toks[i+1][5:])
+                    if int(t) >= int(toks[i+1][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL SMALLERIS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM SMALLERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR SMALLERIS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING SMALLERIS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR SMALLERIS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR SMALLERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM SMALLERIS EXPR {":
+                if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
+                    if int(toks[i+1][4:]) <= int(toks[i+3][4:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
+                    if toks[i+1][8:-1] <= toks[i+3][8:-1]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
+                    if getVARIABLE(toks[i+1][7:]) <= getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
+                    print("ILLEGAL OPERATION ON TYPE BOOLEAN: you can't compare the size of booleans with each other")
+                    exit()
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
+                    if eval(toks[i+1][5:]) <= eval(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
+                    t = eval(toks[i+1][6:])
+                    if int(t) <= int(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
+                    t = eval(toks[i+1][5:])
+                    if int(t) <= int(toks[i+1][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL SMALLER BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM SMALLER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR SMALLER VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING SMALLER STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR SMALLER EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR SMALLER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM SMALLER EXPR {":
+                if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
+                    if int(toks[i+1][4:]) < int(toks[i+3][4:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
+                    if toks[i+1][8:-1] < toks[i+3][8:-1]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
+                    if getVARIABLE(toks[i+1][7:]) < getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
+                    print("ILLEGAL OPERATION ON TYPE BOOLEAN: you can't compare the size of booleans with each other")
+                    exit()
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
+                    if eval(toks[i+1][5:]) < eval(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
+                    t = eval(toks[i+1][6:])
+                    if int(t) < int(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
+                    t = eval(toks[i+1][5:])
+                    if int(t) < int(toks[i+1][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL GREATER BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM GREATER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR GREATER VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING GREATER STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR GREATER EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR GREATER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM GREATER EXPR {":
+                if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
+                    if int(toks[i+1][4:]) > int(toks[i+3][4:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
+                    if toks[i+1][8:-1] > toks[i+3][8:-1]:
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
+                    if getVARIABLE(toks[i+1][7:]) > getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
+                    print("ILLEGAL OPERATION ON TYPE BOOLEAN: you can't compare the size of booleans with each other")
+                    exit()
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
+                    if eval(toks[i+1][5:]) > eval(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
+                    t = eval(toks[i+1][6:])
+                    if int(t) > int(toks[i+3][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
+                    t = eval(toks[i+1][5:])
+                    if int(t) > int(toks[i+1][5:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "WHILE BOOL IS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "WHILE NUM IS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "WHILE VAR IS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "WHILE STRING IS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "WHILE EXPR IS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "WHILE EXPR IS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "WHILE NUM IS EXPR {":
+                if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
+                    if toks[i+1][4:] == toks[i+3][4:]:
+                        i+=5
+                        loopStarted = 1
+                        while toks[i+1][4:] == toks[i+3][4:]:
+                            break
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
+                    if toks[i+1][8:-1] == toks[i+3][8:-1]:
+                        i+=5
+                        loopStarted = 1
+                        while toks[i+1][8:-1] == toks[i+3][8:-1]:
+                            break
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
+                    if getVARIABLE(toks[i+1][7:]) == getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                        loopStarted = 1
+                        while getVARIABLE(toks[i+1][7:]) == getVARIABLE(toks[i+3][7:]):
+                            break
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
+                    if toks[i+1][5:] == toks[i+3][5:]:
+                        i+=5
+                        loopStarted = 1
+                        while toks[i+1][5:] == toks[i+3][5:]:
+                            break
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
+                    if eval(toks[i+1][5:]) == eval(toks[i+3][5:]):
+                        i+=5
+                        loopStarted = 1
+                        while eval(toks[i+1][5:]) == eval(toks[i+3][5:]):
+                            break
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
+                    t = eval(toks[i+1][6:])
+                    if str(t) == str(toks[i+3][5:]):
+                        i+=5
+                        loopStarted = 1
+                        while str(t) == str(toks[i+3][5:]):
+                            break
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
+                    t = eval(toks[i+1][5:])
+                    if str(t) == str(toks[i+1][5:]):
+                        i+=5
+                        loopStarted = 1
+                        while str(t) == str(toks[i+1][5:]):
+                            break
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i][0:4] + " " + toks[i+1] + " " + toks[i+2][0:4] == "BOOL CONCAT BOOL" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "NUM CONCAT NUM" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "VAR CONAT VAR" or toks[i][0:6] + " " + toks[i+1] + " " + toks[i+2][0:6] == "STRING CONCAT STRING" or toks[i][0:4] + " " + toks[i+1] + " " + toks[i+2][0:4] == "EXPR CONCAT EXPR" or toks[i][0:4] + " " + toks[i+1] + " " + toks[i+2][0:3] == "EXPR CONCAT NUM" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "NUM CONAT EXPR":
+                if toks[i][0:3] == "NUM" and toks[i+2][0:3] == "NUM":
+                    print("ILLEGAL OPERATION: cannot concatenate numbers")
+                    exit()
+                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
+                    pass
+                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
+                    pass
+                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
+                    print("ILLEGAL OPERATION: cannot concatenate booleans")
+                    exit()
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
+                    print("ILLEGAL OPERATION: cannot concatenate numbers")
+                    exit()
+                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
+                    print("ILLEGAL OPERATION: cannot concatenate numbers")
+                    exit()
+                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
+                    print("ILLEGAL OPERATION: cannot concatenate numbers")
+                    exit()
+            elif toks[i] == "ELSE" and prevState == 1:
+                while(toks[i] != "}"):
+                    if toks[i] == "}":
+                        break
+                    i+=1
+                prevState = 0
+            elif toks[i] == "ELSE" and prevState == 0:
+                i+=1
+            elif toks[i] == "BREAK":
+                if loopStarted == 0:
+                    print("ILLEGAL OPERATION: break outside a loop")
+                    exit()
+                elif loopStarted == 1:
+                    break
+        except IndexError:
+            pass
     #print(symbols)
     #print(functions)
 
