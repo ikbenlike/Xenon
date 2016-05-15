@@ -4,6 +4,7 @@ from sys import *
 
 tokens = []
 symbols = {}
+constants = {}
 functions = {}
 
 def open_file(filename):
@@ -20,9 +21,11 @@ def lex(filecontents):
     string = ""
     func = ""
     use = ""
+    const = ""
     isexpr = 0
     state = 0
     varstarted = 0
+    conststarted = 0
     funcstarted = 0
     namestarted = 0
     usestarted = 0
@@ -57,6 +60,10 @@ def lex(filecontents):
                 tokens.append("VAR:" + var)
                 varstarted = 0
                 var = ""
+            elif const != "" and conststarted == 1:
+                tokens.append("CONST:" + const)
+                conststarted = 0
+                const = ""
             elif func != "" and funcstarted == 1:
                 tokens.append("FUNC:" + func)
                 if tok != "{":
@@ -84,6 +91,10 @@ def lex(filecontents):
                 tokens.append("VAR:" + var)
                 varstarted = 0
                 var = ""
+            elif const != "" and conststarted == 1:
+                tokens.append("CONST:" + const)
+                conststarted = 0
+                const = ""
             if tokens[-1] == "EQUALS":
                 if expr != "" and isexpr == 1:
                     tokens.append("EXPR:" + expr)
@@ -105,7 +116,7 @@ def lex(filecontents):
             else:
                 tokens.append("EQUALS")
             tok = ""
-        elif tok == "!=" and state ==0:
+        elif tok == "!=" and state == 0:
             if expr != "" and isexpr == 0:
                 tokens.append("NUM:" + expr)
                 expr = ""
@@ -117,6 +128,10 @@ def lex(filecontents):
                 tokens.append("VAR:" + var)
                 varstarted = 0
                 var = ""
+            elif const != "" and conststarted == 1:
+                tokens.append("CONST:" + const)
+                conststarted = 0
+                const = ""
             tokens.append("NOT")
             tok = ""
         elif tok == "<" and state == 0:
@@ -131,6 +146,10 @@ def lex(filecontents):
                 tokens.append("VAR:" + var)
                 varstarted = 0
                 var = ""
+            elif const != "" and conststarted == 1:
+                tokens.append("CONST:" + const)
+                conststarted = 0
+                const = ""
             tokens.append("SMALLER")
             tok = ""
         elif tok == ">" and state == 0:
@@ -145,10 +164,18 @@ def lex(filecontents):
                 tokens.append("VAR:" + var)
                 varstarted = 0
                 var = ""
+            elif const != "" and conststarted == 1:
+                tokens.append("CONST:" + const)
+                conststarted = 0
+                const = ""
             tokens.append("GREATER")
             tok = ""
         elif tok == "var" and state == 0:
             varstarted = 1
+            var += tok
+            tok = ""
+        elif tok == "const" and state == 0:
+            conststarted = 1
             var += tok
             tok = ""
         elif varstarted == 1:
@@ -158,6 +185,14 @@ def lex(filecontents):
                     var = ""
                     varstarted = 0
             var += tok
+            tok = ""
+        elif conststarted == 1:
+            if tok == "<" or tok == ">":
+                if const != "":
+                    tokens.append("CONST:" + const)
+                    const = ""
+                    conststarted = 0
+            const += tok
             tok = ""
         elif tok == "func" and state == 0 and varstarted == 0:
             funcstarted = 1
@@ -232,8 +267,15 @@ def lex(filecontents):
     print(tokens)
     return tokens
 
-def doASSIGN(varname, varvalue):
+def assingVariable(varname, varvalue):
     symbols[varname] = varvalue
+
+def assignConstant(constname, constvalue):
+    if constname not in constants:
+        constants[constname] = constvalue
+    elif constname in constants:
+        print("CONSTANT ERROR: constant with the name `" + constname + "` is already defined")
+        exit()
 
 def doFUNCTION(functionname, functionvalue):
     functions[functionname] = functionvalue
@@ -245,11 +287,18 @@ def getFUNCTION(functionname):
         print("FUNCTION ERROR: undefined function " + functionname)
         exit()
 
-def getVARIABLE(varname):
+def getVariable(varname):
     if varname in symbols:
         return symbols[varname]
     else:
         print("VARIABLE ERROR: undefined variable " + varname)
+        exit()
+
+def getConstant(constname):
+    if constname in constants:
+        return constants[constname]
+    else:
+        print("CONSTANT ERROR: undefined constant " + constname)
         exit()
 
 def getINPUT(string, varname):
@@ -298,7 +347,7 @@ def parse(toks):
             elif toks[i][0:4] == "NAME":
                 i+=1
             elif toks[i] == "PRINT":
-                if toks[i] + " " + toks[i+1][0:6] == "PRINT STRING" or toks[i] + " " + toks[i+1][0:3] == "PRINT NUM" or toks[i] + " " + toks[i+1][0:4] == "PRINT EXPR" or toks[i] + " " + toks[i+1][0:3] == "PRINT VAR" or toks[i] + " " + toks[i+1][0:4] == "PRINT BOOL":
+                if toks[i] == "PRINT":
                     if toks[i+1][0:6] == "STRING":
                         print(toks[i+1][8:-1])
                     elif toks[i+1][0:3] == "NUM":
@@ -308,30 +357,58 @@ def parse(toks):
                     elif toks[i+1][0:4] == "BOOL":
                         print(toks[i+1][5:])
                     elif toks[i+1][0:3] == "VAR":
-                        varToPrint = getVARIABLE(toks[i+1][7:])
+                        if constants != {}:
+                            varToPrint = getVariable(toks[i+1][12:])
+                        elif constants == {}:
+                            varToPrint = getVariable(toks[i+1][7:])
                         if varToPrint[0:6] == "STRING":
                             print(varToPrint[8:-1])
                         elif varToPrint[0:3] == "NUM":
                             print(varToPrint[4:])
                         elif varToPrint[0:4] == "BOOL":
                             print(varToPrint[5:])
+                    elif toks[i+1][0:5] == "CONST":
+                        constToPrint = getConstant(toks[i+1][6:])
+                        if constToPrint[0:6] == "STRING":
+                            print(constToPrint[8:-1])
+                        elif constToPrint[0:3] == "NUM":
+                            print(constToPrint[4:])
+                        elif constToPrint[0:4] == "BOOL":
+                            print(constToPrint[5:])
                 i += 2
-            elif toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:6] == "VAR EQUALS STRING" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "VAR EQUALS NUM" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "VAR EQUALS EXPR" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "VAR EQUALS VAR" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "VAR EQUALS BOOL":
+            elif toks[i][0:3] + " " + toks[i+1] == "VAR EQUALS":
                 if toks[i+2][0:4] == "EXPR":
-                    doASSIGN(toks[i][7:], "NUM:" + str(eval(toks[i+2][5:])))
+                    assingVariable(toks[i][7:], "NUM:" + str(eval(toks[i+2][5:])))
                 elif toks[i+2][0:3] == "NUM":
-                    doASSIGN(toks[i][7:], toks[i+2])
+                    assingVariable(toks[i][7:], toks[i+2])
                 elif toks[i+2][0:6] == "STRING":
-                    doASSIGN(toks[i][7:], toks[i+2])
+                    assingVariable(toks[i][7:], toks[i+2])
                 elif toks[i+2][0:3] == "VAR":
-                    doASSIGN(toks[i][7:], getVARIABLE(toks[i+2][7:]))
+                    assingVariable(toks[i][7:], getVariable(toks[i+2][7:]))
                 elif toks[i+2][0:4] == "BOOL":
-                    doASSIGN(toks[i][7:], toks[i+2])
+                    assingVariable(toks[i][7:], toks[i+2])
+                elif toks[i+2][0:5] == "CONST":
+                    assingVariable(toks[i][12:].replace("const", ""), getConstant(toks[i+2][6:]))
                 i+=3
-            elif toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2][0:3] == "INPUT STRING VAR":
-                getINPUT(toks[i+1][7:], toks[i+2][4:])
+            elif toks[i][0:5] + " " + toks[i+1] == "CONST EQUALS":
+                if toks[i+2][0:4] == "EXPR":
+                    assignConstant(toks[i][6:], "NUM:" + str(eval(toks[i+2][5:])))
+                elif toks[i+2][0:3] == "NUM":
+                    assignConstant(toks[i][6:], toks[i+2])
+                elif toks[i+2][0:6] == "STRING":
+                    assignConstant(toks[i][6:], toks[i+2])
+                elif toks[i+2][0:3] == "VAR":
+                    assignConstant(toks[i][6:], getVariable(toks[i+2][12:]))
+                elif toks[i+2][0:4] == "BOOL":
+                    assignConstant(toks[i][6:], toks[i+2])
+                elif toks[i+2][0:5] == "CONST":
+                    assignConstant(toks[i][6:].replace("const", ""), getConstant(toks[i+2][6:]))
                 i+=3
-            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL IS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM IS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR IS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING IS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR IS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR IS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM IS EXPR {":
+            elif toks[i] + " " + toks[i+1][0:6] == "INPUT STRING":
+                if toks[i+2][0:3] == "VAR":
+                    getINPUT(toks[i+1][7:], toks[i+2][4:])
+                i+=3
+            elif toks[i] + " " + toks[i+2] + " " + toks[i+4] == "IF IS {":
                 if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
                     if toks[i+1][4:] == toks[i+3][4:]:
                         i+=5
@@ -397,7 +474,16 @@ def parse(toks):
                             if toks[i] == "}":
                                 break
                             i+=1
-            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL NOT BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM NOT NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR NOT VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING NOT STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR NOT EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR NOT NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM NOT EXPR {":
+                elif toks[i+1][0:5] == "CONST" and toks[i+3][0:5] == "CONST":
+                    if getConstant(toks[i+1][6:]) == getConstant(toks[i+3][6:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i] + " " + toks[i+2] + " " + toks[i+4] == "IF NOT {":
                 if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
                     if toks[i+1][4:] != toks[i+3][4:]:
                         i+=5
@@ -463,7 +549,16 @@ def parse(toks):
                             if toks[i] == "}":
                                 break
                             i+=1
-            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL GREATERIS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM GREATERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR GREATERIS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING GREATERIS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR GREATERIS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR GREATERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM GREATERIS EXPR {":
+                elif toks[i+1][0:5] == "CONST" and toks[i+3][0:5] == "CONST":
+                    if getConstant(toks[i+1][6:]) != getConstant(toks[i+3][6:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+            elif toks[i] + " " + toks[i+2] + " " + toks[i+4] == "IF GREATERIS {":
                 if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
                     if int(toks[i+1][4:]) >= int(toks[i+3][4:]):
                         i+=5
@@ -484,6 +579,15 @@ def parse(toks):
                             i+=1
                 elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
                     if getVARIABLE(toks[i+1][7:]) >= getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:5] == "CONST" and toks[i+3][0:5] == "CONST":
+                    if getConstant(toks[i+1][6:]) >= getConstant(toks[i+3][6:]):
                         i+=5
                     else:
                         prevState = 0
@@ -523,7 +627,7 @@ def parse(toks):
                             if toks[i] == "}":
                                 break
                             i+=1
-            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL SMALLERIS BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM SMALLERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR SMALLERIS VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING SMALLERIS STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR SMALLERIS EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR SMALLERIS NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM SMALLERIS EXPR {":
+            elif toks[i] + " " + toks[i+2] + " " + toks[i+4] == "IF SMALLERIS {":
                 if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
                     if int(toks[i+1][4:]) <= int(toks[i+3][4:]):
                         i+=5
@@ -544,6 +648,15 @@ def parse(toks):
                             i+=1
                 elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
                     if getVARIABLE(toks[i+1][7:]) <= getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:5] == "CONST" and toks[i+3][0:5] == "CONST":
+                    if getConstant(toks[i+1][6:]) <= getConstant(toks[i+3][6:]):
                         i+=5
                     else:
                         prevState = 0
@@ -583,7 +696,7 @@ def parse(toks):
                             if toks[i] == "}":
                                 break
                             i+=1
-            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL SMALLER BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM SMALLER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR SMALLER VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING SMALLER STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR SMALLER EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR SMALLER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM SMALLER EXPR {":
+            elif toks[i] + " " + toks[i+2] + " " + toks[i+4] == "IF SMALLER {":
                 if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
                     if int(toks[i+1][4:]) < int(toks[i+3][4:]):
                         i+=5
@@ -604,6 +717,15 @@ def parse(toks):
                             i+=1
                 elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
                     if getVARIABLE(toks[i+1][7:]) < getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:5] == "CONST" and toks[i+3][0:5] == "CONST":
+                    if getConstant(toks[i+1][6:]) < getConstant(toks[i+3][6:]):
                         i+=5
                     else:
                         prevState = 0
@@ -643,7 +765,7 @@ def parse(toks):
                             if toks[i] == "}":
                                 break
                             i+=1
-            elif toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF BOOL GREATER BOOL {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF NUM GREATER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF VAR GREATER VAR {" or toks[i] + " " + toks[i+1][0:6] + " " + toks[i+2] + " " + toks[i+3][0:6] + " " + toks[i+4] == "IF STRING GREATER STRING {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF EXPR GREATER EXPR {" or toks[i] + " " + toks[i+1][0:4] + " " + toks[i+2] + " " + toks[i+3][0:3] + " " + toks[i+4] == "IF EXPR GREATER NUM {" or toks[i] + " " + toks[i+1][0:3] + " " + toks[i+2] + " " + toks[i+3][0:4] + " " + toks[i+4] == "IF NUM GREATER EXPR {":
+            elif toks[i] + " " + toks[i+2] + " " + toks[i+4] == "IF GREATER {":
                 if toks[i+1][0:3] == "NUM" and toks[i+3][0:3] == "NUM":
                     if int(toks[i+1][4:]) > int(toks[i+3][4:]):
                         i+=5
@@ -664,6 +786,15 @@ def parse(toks):
                             i+=1
                 elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
                     if getVARIABLE(toks[i+1][7:]) > getVARIABLE(toks[i+3][7:]):
+                        i+=5
+                    else:
+                        prevState = 0
+                        while(toks[i] != "}"):
+                            if toks[i] == "}":
+                                break
+                            i+=1
+                elif toks[i+1][0:5] == "CONST" and toks[i+3][0:5] == "CONST":
+                    if getConstant(toks[i+1][6:]) > getConstant(toks[i+3][6:]):
                         i+=5
                     else:
                         prevState = 0
