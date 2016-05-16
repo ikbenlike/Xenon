@@ -2,10 +2,32 @@
 
 from sys import *
 
+currentFile = ""
 tokens = []
 symbols = {}
 constants = {}
 functions = {}
+
+class function:
+    __name = ""
+    __arguments = {}
+    __symbols = {}
+    __constants = {}
+    __parent = ""
+    __children = []
+
+    def __init__(self, name, arguments=None, symbols=None, constants=None, parent=None, children=None):
+        self.__name = name
+        if arguments != None:
+            self.__arguments = arguments
+        if symbols != None:
+            self.__symbols = symbols
+        if constants != None:
+            self.__constants = constants
+        if parent != None:
+            self.__parent = parent
+        if children != None:
+            self.__children = children
 
 def open_file(filename):
     print("opening " + filename)
@@ -14,6 +36,7 @@ def open_file(filename):
     return data
 
 def lex(filecontents):
+    global tokens
     filecontents = list(filecontents)
     tok = ""
     expr = ""
@@ -41,11 +64,16 @@ def lex(filecontents):
             use += tok
             tok = ""
         elif usestarted == 1:
-            if tok == "\n":
+            if tok == ";":
                 if use != "":
-                    tokens.append("USE:" + use.replace("\n", ""))
-                    use = ""
-                    usestarted = 0
+                    if use[3:] + ".pxe" != currentFile:
+                        newData = open_file(use[3:] + ".pxe")
+                        tokens = tokens + lex(newData)
+                        use = ""
+                        usestarted = 0
+                    else:
+                        print("USE ERROR: can't import a file from itself")
+                        exit()
             use += tok
             tok = ""
         elif tok == "\n" or tok == "!!EOF!!" or tok == "{" or tok == "&":
@@ -921,26 +949,6 @@ def parse(toks):
                             if toks[i] == "}":
                                 break
                             i+=1
-            elif toks[i][0:4] + " " + toks[i+1] + " " + toks[i+2][0:4] == "BOOL CONCAT BOOL" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "NUM CONCAT NUM" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "VAR CONAT VAR" or toks[i][0:6] + " " + toks[i+1] + " " + toks[i+2][0:6] == "STRING CONCAT STRING" or toks[i][0:4] + " " + toks[i+1] + " " + toks[i+2][0:4] == "EXPR CONCAT EXPR" or toks[i][0:4] + " " + toks[i+1] + " " + toks[i+2][0:3] == "EXPR CONCAT NUM" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "NUM CONAT EXPR":
-                if toks[i][0:3] == "NUM" and toks[i+2][0:3] == "NUM":
-                    print("ILLEGAL OPERATION: cannot concatenate numbers")
-                    exit()
-                elif toks[i+1][0:6] == "STRING" and toks[i+3][0:6] == "STRING":
-                    pass
-                elif toks[i+1][0:3] == "VAR" and toks[i+3][0:3] == "VAR":
-                    pass
-                elif toks[i+1][0:4] == "BOOL" and toks[i+3][0:4] == "BOOL":
-                    print("ILLEGAL OPERATION: cannot concatenate booleans")
-                    exit()
-                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:4] == "EXPR":
-                    print("ILLEGAL OPERATION: cannot concatenate numbers")
-                    exit()
-                elif toks[i+1][0:4] == "EXPR" and toks[i+3][0:3] == "NUM":
-                    print("ILLEGAL OPERATION: cannot concatenate numbers")
-                    exit()
-                elif toks[i+1][0:3] == "NUM" and toks[i+3][0:4] == "EXPR":
-                    print("ILLEGAL OPERATION: cannot concatenate numbers")
-                    exit()
             elif toks[i] == "ELSE" and prevState == 1:
                 while(toks[i] != "}"):
                     if toks[i] == "}":
@@ -955,12 +963,15 @@ def parse(toks):
                     exit()
                 elif loopStarted == 1:
                     break
+            else:
+                print("k")
+                i+=1
         except IndexError:
             pass
-    #print(symbols)
-    #print(functions)
 
 def run():
+    global currentFile
+    currentFile = argv[1]
     data = open_file(argv[1])
     toks = lex(data)
     parse(toks)
