@@ -2,6 +2,8 @@
 *    CXenon VM v0.0.0
 */
 
+// compile with: "gcc test.c vm.c -std=c99 "
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
