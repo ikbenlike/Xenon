@@ -1,5 +1,5 @@
 /*
-*    CXenon VM v0.0.0
+*    CXenon VM v0.0.2
 */
 
 #include <stdio.h>
@@ -573,51 +573,3 @@ int vm_print_data(struct stack_base *globals, int count){
     }
     return 0;
 }
-
-/*int main(void){
-    /*struct stack_base hello[] = {
-        {.anint = ICONST}, {.anint = 10},
-        {.anint = GSTORE}, {.anint = 0},
-        {.anint = ICONST}, {.anint = 0},
-        {.anint = GSTORE}, {.anint = 1},
-        {.anint = GLOAD}, {.anint = 1},
-        {.anint = GLOAD}, {.anint = 0},
-        {.anint = ILT},
-        {.anint = BRF}, {.anint = 24},
-        {.anint = GLOAD}, {.anint = 1},
-        {.anint = ICONST}, {.anint = 1},
-        {.anint = IADD},
-        {.anint = GSTORE}, {.anint = 1},
-        {.anint = BR}, {.anint = 8},
-        {.anint = GLOAD}, {.anint = 0},
-        {.anint = IPRINTLN},
-        {.anint = HALT}
-    };*/
-    /*struct stack_base hello[] = {
-        {.anint = ICONST}, {.anint = 1234},
-        {.anint = IPRINTLN},
-        {.anint = HALT}
-    };
-    struct stack_base hello[] = {
-        {.anint = ICONST}, {.anint = 10},
-        {.anint = CALL}, {.anint = 8}, {.anint = 1}, {.anint = 1},
-        {.anint = IPRINTLN},
-        {.anint = HALT},
-        {.anint = LOAD}, {.anint = 0},
-        {.anint = STORE}, {.anint = 1},
-        {.anint = LOAD}, {.anint = 1},
-        {.anint = ICONST}, {.anint = 2},
-        {.anint = IMUL},
-        {.anint = RET}
-    };
-    struct stack_base hello[] = {
-        {.anint = SCONST}, {.astring = "Hello world!"},
-        {.anint = SPRINTLN},
-        {.anint = HALT}
-    };
-    VM *vm = vm_create(hello, sizeof(hello), 0);
-    vm_exec(vm, 0, false);
-    //vm_print_data(vm->globals, vm->nglobals);
-    vm_free(vm);
-    return 0;
-}*/

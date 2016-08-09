@@ -1,5 +1,5 @@
 /*
-    CXenon VM v0.0.0
+    CXenon VM v0.0.2
 */
 
 #ifndef VM_H_
