@@ -1,5 +1,5 @@
 /*
-*    CXenon VM v0.0.2
+*    CXenon VM v0.0.3
 */
 
 // compile with: "gcc test.c vm.c -std=c99 "
