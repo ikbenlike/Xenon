@@ -5,5 +5,5 @@ until release v1.0
 
 NOTE: the following files are licensed under the
 BSD license (said license can be found next to those files):
-*mpc.h
-*mpc.c
+* mpc.h
+* mpc.c

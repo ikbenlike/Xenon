@@ -12,6 +12,7 @@ int main() {
     int i = 11;
 
     str stuff = "stuff";
+    int n = fib(10);
 
     while (i < 10) {
         n = fib(10);

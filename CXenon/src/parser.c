@@ -65,7 +65,7 @@ int parse(char* file_to_parse) {
         "           | <lexp> \"==\" <lexp> ;                                                        \n"
         "                                                                                           \n"
         " typeident : (\"int\" | \"char\" | \"str\" | \"bool\") <ident> ;                           \n"
-        " decls     : (<typeident> '=' ( <number> | <character> | <string> | <boolean> ) ';')* ;    \n"
+        " decls     : (<typeident> '=' ( <number> | <character> | <string> | <boolean> | <term>) ';')* ;    \n"
         " args      : <typeident>? (',' <typeident>)* ;                                             \n"
         " body      : '{' <decls> <stmt>* '}' ;                                                     \n"
         " procedure : (\"int\" | \"char\" | \"str\" | \"bool\") <ident> '(' <args> ')' <body> ;     \n"
