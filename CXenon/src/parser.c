@@ -22,6 +22,7 @@ int parse(char* file_to_parse) {
     mpc_parser_t* Factor    = mpc_new("factor");
     mpc_parser_t* Term      = mpc_new("term");
     mpc_parser_t* Lexp      = mpc_new("lexp");
+    mpc_parser_t* Index     = mpc_new("index");
     mpc_parser_t* Stmt      = mpc_new("stmt");
     mpc_parser_t* Exp       = mpc_new("exp");
     mpc_parser_t* Typeident = mpc_new("typeident");
@@ -47,31 +48,33 @@ int parse(char* file_to_parse) {
         "           | <ident> ;                                                                     \n"
         "                                                                                           \n"
         " term      : <factor> (('*' | '/' | '%') <factor>)* ;                                      \n"
-        " lexp      : <term> (('+' | '-') <term>)* ;                                                \n"
+        " lexp      : <term> <index>* (('+' | '-') <term> <index>* )* ;                                                \n"
         "                                                                                           \n"
+        " index     : '[' <number> ']' ;                                                              \n"
         " stmt      : '{' <stmt>* '}'                                                               \n"
-        "           | \"while\" '(' <exp> ')' <stmt>                                                \n"
+        "           | \"while\" '(' <exp> <index>* ')' <stmt>                                                \n"
         "           | \"if\"    '(' <exp> ')' <stmt>                                                \n"
-        "           | <ident> '=' <lexp> ';'                                                        \n"
+        "           | <ident> '=' <lexp> <index>* ';'                                                        \n"
         "           | \"print\" '(' <lexp>? ')' ';'                                                 \n"
         "           | \"return\" <lexp>? ';'                                                        \n"
-        "           | <ident> '(' <ident>? (',' <ident>)* ')' ';' ;                                 \n"
+        "           | <ident> <index>* ';'                                                           \n"
+        "           | <ident> '(' <ident>? (',' <ident>)* ')' <index>* ';';                                 \n"
         "                                                                                           \n"
-        " exp       : <lexp> '>' <lexp>                                                             \n"
-        "           | <lexp> '<' <lexp>                                                             \n"
+        " exp       : <lexp> '>' <lexp>                                                              \n"
+        "           | <lexp> '<' <lexp>                                                              \n"
         "           | <lexp> \">=\" <lexp>                                                          \n"
         "           | <lexp> \"<=\" <lexp>                                                          \n"
         "           | <lexp> \"!=\" <lexp>                                                          \n"
         "           | <lexp> \"==\" <lexp> ;                                                        \n"
         "                                                                                           \n"
         " typeident : (\"int\" | \"char\" | \"str\" | \"bool\") <ident> ;                           \n"
-        " decls     : (<typeident> '=' ( <number> | <character> | <string> | <boolean> | <term>) ';')* ;    \n"
+        " decls     : (<typeident> '=' ( <number> | <character> | <string> | <boolean> | <term>) <index>* ';')* ;    \n"
         " args      : <typeident>? (',' <typeident>)* ;                                             \n"
         " body      : '{' <decls> <stmt>* '}' ;                                                     \n"
-        " procedure : (\"int\" | \"char\" | \"str\" | \"bool\") <ident> '(' <args> ')' <body> ;     \n"
+        " procedure : (\"int\" | \"char\" | \"str\" | \"bool\") ':' <ident> '(' <args> ')' <body> ;     \n"
         " use       : (\"use\" <string>)* ;                                                         \n"
         " xenon     : /^/ <use> <decls> <procedure>* /$/ ;                                          \n",
-        Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Stmt, Exp,
+        Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Index, Stmt, Exp,
         Typeident, Decls, Args, Body, Procedure, Use, Xenon, NULL);
 
     if (err != NULL) {
@@ -89,7 +92,7 @@ int parse(char* file_to_parse) {
         mpc_err_delete(r.error);
     }
 
-    mpc_cleanup(17, Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Stmt, Exp,
+    mpc_cleanup(18, Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Index, Stmt, Exp,
                   Typeident, Decls, Args, Body, Procedure, Use, Xenon);
 
     return 0;

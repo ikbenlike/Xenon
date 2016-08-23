@@ -1,20 +1,21 @@
 use "stdio.h"
 
-int fib() {
+int:fib() {
     if (n == 0) { return 0; }
     if (n == 1) { return 1; }
     return fib(n - 1) + fib(n - 2);
 }
 
-int main() {
+int:main() {
 
     int n = 11;
     int i = 11;
 
     str stuff = "stuff";
-    int n = fib(10);
+    int n = fib(stuff[1])[1];
+    stuff[1];
 
-    while (i < 10) {
+    while (stuff[1] == stuff[1]) {
         n = fib(10);
         stuff();
         print(n);
