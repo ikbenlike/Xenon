@@ -35,7 +35,7 @@ int parse(char* file_to_parse) {
 
     mpc_err_t* err = mpca_lang(MPCA_LANG_DEFAULT,
         " ident     : /[a-zA-Z_][a-zA-Z0-9_]*/ ;                                                    \n"
-        " number    : /[0-9]+/ ;                                                                    \n"
+        " number    : /-?[0-9]+(\\.[0-9]*)?/ ;                                                                    \n"
         " character : /'.' | \".\"/ ;                                                               \n"
         " string    : /\"(\\\\.|[^\"])*\"/ ;                                                        \n"
         " boolean   : /\"true\" | \"false\"/ ;                                                      \n"
@@ -53,7 +53,9 @@ int parse(char* file_to_parse) {
         " index     : '[' <number> ']' ;                                                              \n"
         " stmt      : '{' <stmt>* '}'                                                               \n"
         "           | \"while\" '(' <exp> <index>* ')' <stmt>                                                \n"
+        "           | \"for\" '(' <exp> <index>* ')' <stmt>                                         \n"
         "           | \"if\"    '(' <exp> ')' <stmt>                                                \n"
+        "           | \"loop\" <stmt>                                                               \n"
         "           | <ident> '=' <lexp> <index>* ';'                                                        \n"
         "           | \"print\" '(' <lexp>? ')' ';'                                                 \n"
         "           | \"return\" <lexp>? ';'                                                        \n"
@@ -65,13 +67,14 @@ int parse(char* file_to_parse) {
         "           | <lexp> \">=\" <lexp>                                                          \n"
         "           | <lexp> \"<=\" <lexp>                                                          \n"
         "           | <lexp> \"!=\" <lexp>                                                          \n"
-        "           | <lexp> \"==\" <lexp> ;                                                        \n"
+        "           | <lexp> \"==\" <lexp>                                                          \n"
+        "           | <lexp> \"in\" <lexp> ;                                                        \n"
         "                                                                                           \n"
-        " typeident : (\"int\" | \"char\" | \"str\" | \"bool\") <ident> ;                           \n"
-        " decls     : (<typeident> '=' ( <number> | <character> | <string> | <boolean> | <term>) <index>* ';')* ;    \n"
+        " typeident : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) <ident> ;                           \n"
+        " decls     : (<typeident> '=' ( <number> | <character> | <string> | <boolean> | <term> ) <index>* ';')* ;    \n"
         " args      : <typeident>? (',' <typeident>)* ;                                             \n"
         " body      : '{' <decls> <stmt>* '}' ;                                                     \n"
-        " procedure : (\"int\" | \"char\" | \"str\" | \"bool\") ':' <ident> '(' <args> ')' <body> ;     \n"
+        " procedure : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) ':' <ident> '(' <args> ')' <body> ;     \n"
         " use       : (\"use\" <string>)* ;                                                         \n"
         " xenon     : /^/ <use> <decls> <procedure>* /$/ ;                                          \n",
         Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Index, Stmt, Exp,
