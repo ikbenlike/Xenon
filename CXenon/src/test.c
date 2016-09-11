@@ -10,9 +10,10 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include "vm.h"
+#include "types.h"
 
 int main(void){
-    struct stack_base loop[] = {
+    /*struct stack_base loop[] = {
         {.anint = ICONST}, {.anint = 10},
         {.anint = IGSTORE}, {.anint = 0},
         {.anint = ICONST}, {.anint = 0},
@@ -32,7 +33,7 @@ int main(void){
     };
     VM *vm = vm_create(loop, sizeof(loop), 2);
     vm_exec(vm, 0, false);
-    vm_print_data(vm->globals, vm->nglobals);
+    //vm_print_data(vm->globals, vm->nglobals);
     vm_free(vm);
     struct stack_base hellonums[] = {
         {.anint = ICONST}, {.anint = 1234},
@@ -61,8 +62,13 @@ int main(void){
         {.anint = SCONST}, {.astring = "Hello world!"},
         {.anint = SPRINTLN},
         {.anint = HALT}
-    };
-    vm = vm_create(hello, sizeof(hello), 0);
+    };*/
+    struct stack_base hello[3];
+    vm_add_opcode_to_stack(hello, SCONST, 0);
+    vm_add_string_to_stack(hello, 1, "Hello World!", 1);
+    vm_add_opcode_to_stack(hello, SPRINTLN, 2);
+    vm_add_opcode_to_stack(hello, HALT, 3);
+    VM* vm = vm_create(hello, sizeof(hello), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
     return 0;

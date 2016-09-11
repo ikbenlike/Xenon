@@ -2,4 +2,6 @@
     CXenon VM v0.0.3
 */
 
-int parse(char* file_to_parse);
+#include "mpc/mpc.h"
+
+mpc_ast_t* parse(char* file_to_parse);
