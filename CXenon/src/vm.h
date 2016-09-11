@@ -81,12 +81,18 @@ typedef enum {
 
 
 
-struct stack_base{
-    char* astring;
-    char achar;
-    int anint;
-    float afloat;
-    bool abool;
+struct stack_base {
+    char type[6];
+    struct {
+        struct {
+            int len;
+            char* content;
+        } astring;
+        char achar;
+        int anint;
+        float afloat;
+        bool abool;
+    } data;
 };
 
 
