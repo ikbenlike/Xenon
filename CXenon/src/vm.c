@@ -117,7 +117,7 @@ int vm_print_instr(struct stack_base *code, int ip){
             printf("%04d:  %-10s%-10d", ip, inst->name, code[ip + 1].data.anint);
             break;
         case 2:
-            printf("%04d:  %-10s%d,%10d", ip, inst->name, code[ip + 1].data, code[ip + 2].data.anint);
+            printf("%04d:  %-10s%d,%10d", ip, inst->name, code[ip + 1].data.anint, code[ip + 2].data.anint);
             break;
         case 3:
             printf("%04d:  %-10s%d,%d,%-6d", ip, inst->name, code[ip + 1].data.anint, code[ip + 2].data.anint, code[ip + 3].data.anint);
@@ -308,7 +308,7 @@ int vm_exec(VM *vm, int startip, bool trace){
                     break;
                 }
             case BCONST:
-                bv = vm->code[ip].data.abool;
+                bv = vm->code[ip].data.anint;
                 ip++;
                 sp++;
                 if(bv == BTRUE){
@@ -342,14 +342,14 @@ int vm_exec(VM *vm, int startip, bool trace){
                     break;
                 }
             case SCONST:
-                sv = vm->code[ip].data.astring.content;
+                sv = vm->code[ip].data.astring;
                 ip++;
                 sp++;
-                vm->stack[sp].data.abool = sv;
+                vm->stack[sp].data.astring = sv;
                 break;
             case SEQ:
-                strcpy(sb, vm->stack[sp--].data.astring.content);
-                strcpy(sa, vm->stack[sp--].data.astring.content);
+                strcpy(sb, vm->stack[sp--].data.astring);
+                strcpy(sa, vm->stack[sp--].data.astring);
                 if(strcmp(sa, sb) == 0){
                     vm->stack[++sp].data.abool = true;
                     strcpy(sa, "\0");
@@ -363,8 +363,8 @@ int vm_exec(VM *vm, int startip, bool trace){
                     break;
                 }
             case SNEQ:
-                strcpy(sb, vm->stack[sp--].data.astring.content);
-                strcpy(sa, vm->stack[sp--].data.astring.content);
+                strcpy(sb, vm->stack[sp--].data.astring);
+                strcpy(sa, vm->stack[sp--].data.astring);
                 if(strcmp(sa, sb) != 0){
                     vm->stack[++sp].data.abool = true;
                     strcpy(sa, "\0");
@@ -378,8 +378,8 @@ int vm_exec(VM *vm, int startip, bool trace){
                     break;
                 }
             case SLT:
-                strcpy(sb, vm->stack[sp--].data.astring.content);
-                strcpy(sa, vm->stack[sp--].data.astring.content);
+                strcpy(sb, vm->stack[sp--].data.astring);
+                strcpy(sa, vm->stack[sp--].data.astring);
                 if(strlen(sa) > strlen(sb)){
                     vm->stack[++sp].data.abool = true;
                     strcpy(sa, "\0");
@@ -393,8 +393,8 @@ int vm_exec(VM *vm, int startip, bool trace){
                     break;
                 }
             case SMT:
-                strcpy(sb, vm->stack[sp--].data.astring.content);
-                strcpy(sa, vm->stack[sp--].data.astring.content);
+                strcpy(sb, vm->stack[sp--].data.astring);
+                strcpy(sa, vm->stack[sp--].data.astring);
                 if(strlen(sa) < strlen(sb)){
                     vm->stack[++sp].data.abool = true;
                     strcpy(sa, "\0");
@@ -428,7 +428,7 @@ int vm_exec(VM *vm, int startip, bool trace){
                 printf("%f\n", fv);
                 break;
             case BPRINT:
-                bv = vm->stack[sp].data.abool;
+                bv = vm->stack[sp].data.anint;
                 sp--;
                 printf("%s", bv ? "true" : "false");
                 break;
@@ -438,20 +438,14 @@ int vm_exec(VM *vm, int startip, bool trace){
                 printf("%s\n", bv ? "true" : "false");
                 break;
             case SPRINT:
-                sv = vm->stack[sp].data.astring.content;
+                sv = vm->stack[sp].data.astring;
                 sp--;
                 printf("%s", sv);
                 break;
             case SPRINTLN:
-                sv = vm->stack[sp].data.astring.content;
-                printf("%i\n", sp);
+                sv = vm->stack[sp].data.astring;
                 sp--;
-                printf("%i\n", sp);
-                for(int si = 0; si < 11; si++){
-                    printf("%i\n", si);
-                    printf("%c", sv[si]);
-                }
-                printf("\n");
+                printf("%s\n", sv);
                 break;
             case IGLOAD:
                 addr = vm->code[ip++].data.anint;
@@ -471,19 +465,19 @@ int vm_exec(VM *vm, int startip, bool trace){
                 break;
             case SGLOAD:
                 addr = vm->code[ip++].data.anint;
-                vm->stack[++sp].data.astring.content = vm->globals[addr].data.astring.content;
+                vm->stack[++sp].data.astring = vm->globals[addr].data.astring;
                 break;
             case SGSTORE:
                 addr = vm->code[ip++].data.anint;
-                vm->globals[addr].data.astring.content = vm->stack[sp--].data.astring.content;
+                vm->globals[addr].data.astring = vm->stack[sp--].data.astring;
                 break;
             case SLOAD:
                 offset = vm->code[ip++].data.anint;
-                vm->stack[++sp].data.astring.content = vm->call_stack[callsp].locals[offset].data.astring.content;
+                vm->stack[++sp].data.astring = vm->call_stack[callsp].locals[offset].data.astring;
                 break;
             case SSTORE:
                 offset = vm->code[ip++].data.anint;
-                vm->call_stack[callsp].locals[offset].data.astring.content = vm->stack[sp--].data.astring.content;
+                vm->call_stack[callsp].locals[offset].data.astring = vm->stack[sp--].data.astring;
                 break;
             case BGLOAD:
                 addr = vm->code[ip++].data.anint;

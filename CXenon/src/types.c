@@ -27,8 +27,7 @@ int vm_add_int_to_stack(struct stack_base* stack, int value, int i){
 
 int vm_add_string_to_stack(struct stack_base* stack, int i, char* value, int len){
     strcpy(stack[i].type, "string");
-    stack[i].data.astring.content = "Hello World!";
-    stack[i].data.astring.len = len;
+    stack[i].data.astring = value;
     return 0;
 }
 
