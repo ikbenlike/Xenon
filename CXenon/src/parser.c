@@ -1,5 +1,5 @@
 /*
-    CXenon VM v0.0.3
+    CXenon VM v0.0.5
 */
 
 #include <stdio.h>
@@ -10,13 +10,14 @@
 #include "parser.h"
 #include "mpc/mpc.h"
 
-mpc_ast_t* parse(char* file_to_parse) {
+int parse(char* file_to_parse) {
 
     mpc_parser_t* Ident     = mpc_new("ident");
     mpc_parser_t* Number    = mpc_new("number");
     mpc_parser_t* Character = mpc_new("character");
     mpc_parser_t* String    = mpc_new("string");
     mpc_parser_t* Boolean   = mpc_new("boolean");
+    mpc_parser_t* Comment   = mpc_new("comment");
     mpc_parser_t* Factor    = mpc_new("factor");
     mpc_parser_t* Term      = mpc_new("term");
     mpc_parser_t* Lexp      = mpc_new("lexp");
@@ -36,8 +37,9 @@ mpc_ast_t* parse(char* file_to_parse) {
         " number    : /-?[0-9]+(\\.[0-9]*)?/ ;                                                                      \n"
         " character : /'.' | \".\"/ ;                                                                               \n"
         " string    : /\"(\\\\.|[^\"])*\"/ ;                                                                        \n"
-        " boolean   : /\"true\" | \"false\"/ ;                                                                      \n"
+        " boolean   : /true | false/ ;                                                                      \n"
         "                                                                                                           \n"
+        " comment   : /\\/\\*.*\\*\\// ;                                                                               \n"
         " factor    : '(' <lexp> ')'                                                                                \n"
         "           | <number>                                                                                      \n"
         "           | <character>                                                                                   \n"
@@ -75,7 +77,7 @@ mpc_ast_t* parse(char* file_to_parse) {
         " procedure : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) ':' <ident> '(' <args> ')' <body> ;    \n"
         " use       : (\"use\" <string>)* ;                                                                         \n"
         " xenon     : /^/ <use> <decls> <procedure>* /$/ ;                                                          \n",
-        Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Index, Stmt, Exp,
+        Ident, Number, Character, String, Boolean, Comment, Factor, Term, Lexp, Index, Stmt, Exp,
         Typeident, Decls, Args, Body, Procedure, Use, Xenon, NULL);
 
     if (err != NULL) {
@@ -84,20 +86,18 @@ mpc_ast_t* parse(char* file_to_parse) {
         exit(1);
     }
 
-    mpc_ast_t* ast;
     mpc_result_t r;
     if (mpc_parse_contents(file_to_parse, Xenon, &r)) {
-        ast = r.output;
-        //mpc_ast_print(r.output);
+        mpc_ast_print(r.output);
         mpc_ast_delete(r.output);
     } else {
         mpc_err_print(r.error);
         mpc_err_delete(r.error);
     }
 
-    mpc_cleanup(18, Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Index, Stmt, Exp,
+    mpc_cleanup(19, Ident, Number, Character, String, Boolean, Comment, Factor, Term, Lexp, Index, Stmt, Exp,
                   Typeident, Decls, Args, Body, Procedure, Use, Xenon);
 
-    return ast;
+    return 0;
 
 }

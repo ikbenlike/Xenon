@@ -1,5 +1,5 @@
 /*
-*    CXenon VM v0.0.3
+*    CXenon VM v0.0.5
 */
 
 #include <stdio.h>
@@ -9,23 +9,13 @@
 #include <stdbool.h>
 #include "vm.h"
 
-char* new_string(char* the_shit, int len) {
-    char* the_string = (char*)malloc(sizeof(char)*len+1);
-    for (int i  = 0; i < len; i++) { // not equal to
-        the_string[i] = the_shit[i];
-    }
-    the_string[len] = '\0';
-    printf("%s\n", the_string);
-    return the_string;
-}
-
 int vm_add_int_to_stack(struct stack_base* stack, int value, int i){
     strcpy(stack[i].type, "int");
     stack[i].data.anint = value;
     return 0;
 }
 
-int vm_add_string_to_stack(struct stack_base* stack, int i, char* value, int len){
+int vm_add_string_to_stack(struct stack_base* stack, char* value, int i){
     strcpy(stack[i].type, "string");
     stack[i].data.astring = value;
     return 0;
