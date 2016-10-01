@@ -164,6 +164,7 @@ int vm_exec(VM *vm, int startip, bool trace){
     char sa[1000];
     char sb[1000];
     char cv, ca, cb;
+    char* si;
 
     int size = sizeof(vm->code); // declares size of code
 
@@ -492,6 +493,24 @@ int vm_exec(VM *vm, int startip, bool trace){
                 cv = vm->stack[sp].data.achar;
                 sp--;
                 printf("%c\n", cv);
+                break;
+            case INPUT:
+                sp++;
+                a = 0;
+                si = malloc(sizeof(char) * 1000);
+                fflush(stdin);
+                while(1){
+                    si[a] = getchar();
+                    if(a >= sizeof(si)){
+                        si = realloc(si, sizeof(si) + 10);
+                    }
+                    if(si[a] == '\n'){
+                        si[a] = '\0';
+                        break;
+                    }
+                    a++;
+                }
+                vm->stack[sp].data.astring = si;
                 break;
             case IGLOAD:
                 addr = vm->code[ip++].data.anint;

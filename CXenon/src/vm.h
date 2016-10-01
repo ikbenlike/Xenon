@@ -85,6 +85,7 @@ typedef enum {
     CGSTORE =    65,         // char global store
     CLOAD =      66,         // char load
     CSTORE =     67,         // char store
+    INPUT =      68,         // get input
     HALT =       69          // exit program
 } VM_CODE;
 

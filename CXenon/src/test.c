@@ -100,5 +100,15 @@ int main(void){
     vm = vm_create(hellochar, sizeof(hellochar), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
+    struct stack_base get_input[6];
+    vm_add_opcode_to_stack(get_input, SCONST, 0);
+    vm_add_string_to_stack(get_input, "enter some input: ", 1);
+    vm_add_opcode_to_stack(get_input, SPRINT, 2);
+    vm_add_opcode_to_stack(get_input, INPUT, 3);
+    vm_add_opcode_to_stack(get_input, SPRINTLN, 4);
+    vm_add_opcode_to_stack(get_input, HALT, 5);
+    vm = vm_create(get_input, sizeof(get_input), 0);
+    vm_exec(vm, 0, false);
+    vm_free(vm);
     return 0;
 }
