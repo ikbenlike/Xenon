@@ -76,7 +76,16 @@ typedef enum {
     FGSTORE =    56,         // float global store
     FLOAD =      57,         // float load
     FSTORE =     58,         // float store
-    HALT =       59          // exit program
+    CCONST =     59,         // char constant
+    CEQ =        60,         // char equals
+    CNEQ =       61,         // char not equals
+    CPRINT =     62,         // char print
+    CPRINTLN =   63,         // char print with trailing newline
+    CGLOAD =     64,         // char global load
+    CGSTORE =    65,         // char global store
+    CLOAD =      66,         // char load
+    CSTORE =     67,         // char store
+    HALT =       68          // exit program
 } VM_CODE;
 
 

@@ -407,20 +407,48 @@ int vm_exec(VM *vm, int startip, bool trace){
                     strcpy(sb, "\0");
                     break;
                 }
+            case CCONST:
+                cv = vm->code[ip].achar;
+                ip++;
+                sp++;
+                vm->stack[sp].abool = cv;
+                break;
+            case CEQ:
+                cb = vm->stack[sp--].achar;
+                ca = vm->stack[sp--].achar;
+                if(ba != bb){
+                    vm->stack[++sp].abool = true;
+                    break;
+                }
+                else {
+                    vm->stack[++sp].abool = false;
+                    break;
+                }
+            case CNEQ:
+                cb = vm->stack[sp--].achar;
+                ca = vm->stack[sp--].achar;
+                if(ba == bb){
+                    vm->stack[++sp].abool = true;
+                    break;
+                }
+                else {
+                    vm->stack[++sp].abool = false;
+                    break;
+                }
             case IPRINT:
                 v = vm->stack[sp].anint;
                 sp--;
                 printf("%i", v);
                 break;
-            case FPRINT:
-                fv = vm->stack[sp].afloat;
-                sp--;
-                printf("%f", fv);
-                break;
             case IPRINTLN:
                 v = vm->stack[sp].anint;
                 sp--;
                 printf("%i\n", v);
+                break;
+            case FPRINT:
+                fv = vm->stack[sp].afloat;
+                sp--;
+                printf("%f", fv);
                 break;
             case FPRINTLN:
                 fv = vm->stack[sp].afloat;
@@ -446,6 +474,16 @@ int vm_exec(VM *vm, int startip, bool trace){
                 sv = vm->stack[sp].astring;
                 sp--;
                 printf("%s\n", sv);
+                break;
+            case CPRINT:
+                cv = vm->stack[sp].achar;
+                sp--;
+                printf("%c", cv);
+                break;
+            case CPRINTLN:
+                cv = vm->stack[sp].achar;
+                sp--;
+                printf("%c\n", cv);
                 break;
             case IGLOAD:
                 addr = vm->code[ip++].anint;
@@ -510,6 +548,22 @@ int vm_exec(VM *vm, int startip, bool trace){
             case FSTORE:
                 offset = vm->code[ip++].anint;
                 vm->call_stack[callsp].locals[offset].afloat = vm->stack[sp--].afloat;
+                break;
+            case CGLOAD:
+                addr = vm->code[ip++].anint;
+                vm->stack[++sp].achar = vm->globals[addr].achar;
+                break;
+            case CGSTORE:
+                addr = vm->code[ip++].anint;
+                vm->globals[addr].achar = vm->stack[sp--].achar;
+                break;
+            case CLOAD:
+                offset = vm->code[ip++].anint;
+                vm->stack[++sp].achar = vm->call_stack[callsp].locals[offset].achar;
+                break;
+            case CSTORE:
+                offset = vm->code[ip++].anint;
+                vm->call_stack[callsp].locals[offset].achar = vm->stack[sp--].achar;
                 break;
             case CALL:
                 addr = vm->code[ip++].anint;

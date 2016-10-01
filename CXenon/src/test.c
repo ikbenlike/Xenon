@@ -12,6 +12,7 @@
 #include "vm.h"
 
 int main(void){
+    printf("%i\n", sizeof(struct stack_base));
     struct stack_base loop[] = {
         {.anint = ICONST}, {.anint = 10},
         {.anint = IGSTORE}, {.anint = 0},
