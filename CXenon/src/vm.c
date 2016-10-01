@@ -1,5 +1,5 @@
 /*
-*    CXenon VM v0.0.3
+*    CXenon VM v0.0.5
 */
 
 #include <stdio.h>
@@ -77,7 +77,16 @@ static VM_INSTRUCTION vm_instructions[] = {
     { "fgstore",  1 },    // 56
     { "fload",    1 },    // 57
     { "fstore",   1 },    // 58
-    { "halt",     0 }     // 59
+    { "cconst",   1 },    // 59
+    { "cprint",   0 },    // 60
+    { "cprintln", 0 },    // 61
+    { "ceq",      0 },    // 62
+    { "cneq",     0 },    // 63
+    { "cgload",   1 },    // 64
+    { "cgstore",  1 },    // 65
+    { "cload",    1 },    // 66
+    { "cstore",   1 },    // 67
+    { "halt",     0 }     // 68
 };
 
 
@@ -89,7 +98,7 @@ static void vm_context_init(Context *ctx, int ip, int nlocals);
 int vm_init(VM *vm, struct stack_base *code, int code_size, int nglobals){
     vm->code = code;
     vm->code_size = code_size;
-    vm->globals = calloc(nglobals, sizeof(int));
+    vm->globals = calloc(nglobals, sizeof(struct stack_base));
     vm->nglobals = nglobals;
     return 0;
 }
@@ -107,20 +116,20 @@ VM *vm_create(struct stack_base *code, int code_size, int nglobals){
 }
 
 int vm_print_instr(struct stack_base *code, int ip){
-    int opcode = code[ip].anint;
+    int opcode = code[ip].data.anint;
     VM_INSTRUCTION *inst = &vm_instructions[opcode];
     switch (inst->nargs) {
         case 0:
             printf("%04d:  %-20s", ip, inst->name);
             break;
         case 1:
-            printf("%04d:  %-10s%-10d", ip, inst->name, code[ip + 1].anint);
+            printf("%04d:  %-10s%-10d", ip, inst->name, code[ip + 1].data.anint);
             break;
         case 2:
-            printf("%04d:  %-10s%d,%10d", ip, inst->name, code[ip + 1].anint, code[ip + 2].anint);
+            printf("%04d:  %-10s%d,%10d", ip, inst->name, code[ip + 1].data.anint, code[ip + 2].data.anint);
             break;
         case 3:
-            printf("%04d:  %-10s%d,%d,%-6d", ip, inst->name, code[ip + 1].anint, code[ip + 2].anint, code[ip + 3].anint);
+            printf("%04d:  %-10s%d,%d,%-6d", ip, inst->name, code[ip + 1].data.anint, code[ip + 2].data.anint, code[ip + 3].data.anint);
             break;
     }
     return 0;
@@ -129,7 +138,7 @@ int vm_print_instr(struct stack_base *code, int ip){
 int vm_print_stack(struct stack_base *stack, int count){
     printf("stack=[");
     for (int i = 0; i <= count; i++) {
-        printf(" %d", stack[i].anint);
+        printf(" %d", stack[i].data.anint);
     }
     printf(" ]\n");
     return 0;
@@ -154,13 +163,14 @@ int vm_exec(VM *vm, int startip, bool trace){
     char* sv;
     char sa[1000];
     char sb[1000];
+    char cv, ca, cb;
 
     int size = sizeof(vm->code); // declares size of code
 
     ip = startip;
     sp = -1;
     callsp = -1;
-    int opcode = vm->code[ip].anint; // fetch
+    int opcode = vm->code[ip].data.anint; // fetch
 
     while(1){
 
@@ -171,408 +181,406 @@ int vm_exec(VM *vm, int startip, bool trace){
         ip++;
         switch(opcode){
             case ICONST:
-                vm->stack[++sp].anint = vm->code[ip++].anint;
+                vm->stack[++sp].data.anint = vm->code[ip++].data.anint;
                 break;
             case ISUB:
-                b = vm->stack[sp--].anint;
-                a = vm->stack[sp--].anint;
-                vm->stack[++sp].anint = a - b;
+                b = vm->stack[sp--].data.anint;
+                a = vm->stack[sp--].data.anint;
+                vm->stack[++sp].data.anint = a - b;
                 break;
             case IADD:
-                b = vm->stack[sp--].anint;
-                a = vm->stack[sp--].anint;
-                vm->stack[++sp].anint = a + b;
+                b = vm->stack[sp--].data.anint;
+                a = vm->stack[sp--].data.anint;
+                vm->stack[++sp].data.anint = a + b;
                 break;
             case IMUL:
-                b = vm->stack[sp--].anint;
-                a = vm->stack[sp--].anint;
-                vm->stack[++sp].anint = a * b;
+                b = vm->stack[sp--].data.anint;
+                a = vm->stack[sp--].data.anint;
+                vm->stack[++sp].data.anint = a * b;
                 break;
             case IDIV:
-                b = vm->stack[sp--].anint;
-                a = vm->stack[sp--].anint;
-                vm->stack[++sp].anint = a/b;
+                b = vm->stack[sp--].data.anint;
+                a = vm->stack[sp--].data.anint;
+                vm->stack[++sp].data.anint = a/b;
                 break;
             case ILT:
-                b = vm->stack[sp--].anint;
-                a = vm->stack[sp--].anint;
+                b = vm->stack[sp--].data.anint;
+                a = vm->stack[sp--].data.anint;
                 if(a > b){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case IMT:
-                b = vm->stack[sp--].anint;
-                a = vm->stack[sp--].anint;
+                b = vm->stack[sp--].data.anint;
+                a = vm->stack[sp--].data.anint;
                 if(a < b){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case IEQ:
-                b = vm->stack[sp--].anint;
-                a = vm->stack[sp--].anint;
+                b = vm->stack[sp--].data.anint;
+                a = vm->stack[sp--].data.anint;
                 if(a == b){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case INEQ:
-                b = vm->stack[sp--].anint;
-                a = vm->stack[sp--].anint;
+                b = vm->stack[sp--].data.anint;
+                a = vm->stack[sp--].data.anint;
                 if(a != b){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case FCONST:
-                fv = vm->code[ip].afloat;
+                fv = vm->code[ip].data.afloat;
                 ip++;
                 sp++;
-                vm->stack[sp].afloat = fv;
+                vm->stack[sp].data.afloat = fv;
                 break;
             case FSUB:
-                fb = vm->stack[sp--].afloat;
-                fa = vm->stack[sp--].afloat;
-                vm->stack[++sp].afloat = fa + fb;
+                fb = vm->stack[sp--].data.afloat;
+                fa = vm->stack[sp--].data.afloat;
+                vm->stack[++sp].data.afloat = fa + fb;
                 break;
             case FADD:
-                fb = vm->stack[sp--].afloat;
-                fa = vm->stack[sp--].afloat;
-                vm->stack[++sp].afloat = fa + fb;
+                fb = vm->stack[sp--].data.afloat;
+                fa = vm->stack[sp--].data.afloat;
+                vm->stack[++sp].data.afloat = fa + fb;
                 break;
             case FMUL:
-                fb = vm->stack[sp--].afloat;
-                fa = vm->stack[sp--].afloat;
-                vm->stack[++sp].afloat = fa * fb;
+                fb = vm->stack[sp--].data.afloat;
+                fa = vm->stack[sp--].data.afloat;
+                vm->stack[++sp].data.afloat = fa * fb;
                 break;
             case FDIV:
-                fb = vm->stack[sp--].afloat;
-                fa = vm->stack[sp--].afloat;
-                vm->stack[++sp].afloat = fa/fb;
+                fb = vm->stack[sp--].data.afloat;
+                fa = vm->stack[sp--].data.afloat;
+                vm->stack[++sp].data.afloat = fa/fb;
                 break;
             case FEQ:
-                fb = vm->stack[sp--].afloat;
-                fa = vm->stack[sp--].afloat;
+                fb = vm->stack[sp--].data.afloat;
+                fa = vm->stack[sp--].data.afloat;
                 if(fa == fb){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case FLT:
-                fb = vm->stack[sp--].afloat;
-                fa = vm->stack[sp--].afloat;
+                fb = vm->stack[sp--].data.afloat;
+                fa = vm->stack[sp--].data.afloat;
                 if(fa > fb){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case FMT:
-                fb = vm->stack[sp--].afloat;
-                fa = vm->stack[sp--].afloat;
+                fb = vm->stack[sp--].data.afloat;
+                fa = vm->stack[sp--].data.afloat;
                 if(fa < fb){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case FNEQ:
-                fb = vm->stack[sp--].afloat;
-                fa = vm->stack[sp--].afloat;
+                fb = vm->stack[sp--].data.afloat;
+                fa = vm->stack[sp--].data.afloat;
                 if(fa != fb){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case BCONST:
-                bv = vm->code[ip].anint;
+                bv = vm->code[ip].data.anint;
                 ip++;
                 sp++;
                 if(bv == BTRUE){
-                    vm->stack[sp].abool = true;
+                    vm->stack[sp].data.abool = true;
                     break;
                 }
                 else if(bv == BFALSE){
-                    vm->stack[sp].abool = false;
+                    vm->stack[sp].data.abool = false;
                     break;
                 }
             case BNEQ:
-                bb = vm->stack[sp--].abool;
-                ba = vm->stack[sp--].abool;
+                bb = vm->stack[sp--].data.abool;
+                ba = vm->stack[sp--].data.abool;
                 if(ba == bb){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case BEQ:
-                bb = vm->stack[sp--].abool;
-                ba = vm->stack[sp--].abool;
+                bb = vm->stack[sp--].data.abool;
+                ba = vm->stack[sp--].data.abool;
                 if(ba != bb){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     break;
                 }
             case SCONST:
-                sv = vm->code[ip].astring;
+                sv = vm->code[ip].data.astring;
                 ip++;
                 sp++;
-                vm->stack[sp].astring = sv;
+                vm->stack[sp].data.astring = sv;
                 break;
             case SEQ:
-                strcpy(sb, vm->stack[sp--].astring);
-                strcpy(sa, vm->stack[sp--].astring);
+                strcpy(sb, vm->stack[sp--].data.astring);
+                strcpy(sa, vm->stack[sp--].data.astring);
                 if(strcmp(sa, sb) == 0){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     strcpy(sa, "\0");
                     strcpy(sb, "\0");
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     strcpy(sa, "\0");
                     strcpy(sb, "\0");
                     break;
                 }
             case SNEQ:
-                strcpy(sb, vm->stack[sp--].astring);
-                strcpy(sa, vm->stack[sp--].astring);
+                strcpy(sb, vm->stack[sp--].data.astring);
+                strcpy(sa, vm->stack[sp--].data.astring);
                 if(strcmp(sa, sb) != 0){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     strcpy(sa, "\0");
                     strcpy(sb, "\0");
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     strcpy(sa, "\0");
                     strcpy(sb, "\0");
                     break;
                 }
             case SLT:
-                strcpy(sb, vm->stack[sp--].astring);
-                strcpy(sa, vm->stack[sp--].astring);
+                strcpy(sb, vm->stack[sp--].data.astring);
+                strcpy(sa, vm->stack[sp--].data.astring);
                 if(strlen(sa) > strlen(sb)){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     strcpy(sa, "\0");
                     strcpy(sb, "\0");
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     strcpy(sa, "\0");
                     strcpy(sb, "\0");
                     break;
                 }
             case SMT:
-                strcpy(sb, vm->stack[sp--].astring);
-                strcpy(sa, vm->stack[sp--].astring);
+                strcpy(sb, vm->stack[sp--].data.astring);
+                strcpy(sa, vm->stack[sp--].data.astring);
                 if(strlen(sa) < strlen(sb)){
-                    vm->stack[++sp].abool = true;
+                    vm->stack[++sp].data.abool = true;
                     strcpy(sa, "\0");
                     strcpy(sb, "\0");
                     break;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
+                    vm->stack[++sp].data.abool = false;
                     strcpy(sa, "\0");
                     strcpy(sb, "\0");
                     break;
                 }
             case CCONST:
-                cv = vm->code[ip].achar;
+                cv = vm->code[ip].data.achar;
                 ip++;
                 sp++;
-                vm->stack[sp].abool = cv;
+                vm->stack[sp].data.achar = cv;
                 break;
             case CEQ:
-                cb = vm->stack[sp--].achar;
-                ca = vm->stack[sp--].achar;
-                if(ba != bb){
-                    vm->stack[++sp].abool = true;
-                    break;
+                cb = vm->stack[sp--].data.achar;
+                ca = vm->stack[sp--].data.achar;
+                if(ca == cb){
+                    vm->stack[++sp].data.abool = true;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
-                    break;
+                    vm->stack[++sp].data.abool = false;
                 }
+                break;
             case CNEQ:
-                cb = vm->stack[sp--].achar;
-                ca = vm->stack[sp--].achar;
-                if(ba == bb){
-                    vm->stack[++sp].abool = true;
-                    break;
+                cb = vm->stack[sp--].data.achar;
+                ca = vm->stack[sp--].data.achar;
+                if(ca != cb){
+                    vm->stack[++sp].data.abool = true;
                 }
                 else {
-                    vm->stack[++sp].abool = false;
-                    break;
+                    vm->stack[++sp].data.abool = false;
                 }
+                break;
             case IPRINT:
-                v = vm->stack[sp].anint;
+                v = vm->stack[sp].data.anint;
                 sp--;
                 printf("%i", v);
                 break;
-            case IPRINTLN:
-                v = vm->stack[sp].anint;
-                sp--;
-                printf("%i\n", v);
-                break;
             case FPRINT:
-                fv = vm->stack[sp].afloat;
+                fv = vm->stack[sp].data.afloat;
                 sp--;
                 printf("%f", fv);
                 break;
+            case IPRINTLN:
+                v = vm->stack[sp].data.anint;
+                sp--;
+                printf("%i\n", v);
+                break;
             case FPRINTLN:
-                fv = vm->stack[sp].afloat;
+                fv = vm->stack[sp].data.afloat;
                 sp--;
                 printf("%f\n", fv);
                 break;
             case BPRINT:
-                bv = vm->stack[sp].anint;
+                bv = vm->stack[sp].data.anint;
                 sp--;
                 printf("%s", bv ? "true" : "false");
                 break;
             case BPRINTLN:
-                bv = vm->stack[sp].abool;
+                bv = vm->stack[sp].data.abool;
                 sp--;
                 printf("%s\n", bv ? "true" : "false");
                 break;
             case SPRINT:
-                sv = vm->stack[sp].astring;
+                sv = vm->stack[sp].data.astring;
                 sp--;
                 printf("%s", sv);
                 break;
             case SPRINTLN:
-                sv = vm->stack[sp].astring;
+                sv = vm->stack[sp].data.astring;
                 sp--;
                 printf("%s\n", sv);
                 break;
             case CPRINT:
-                cv = vm->stack[sp].achar;
+                cv = vm->stack[sp].data.achar;
                 sp--;
                 printf("%c", cv);
                 break;
             case CPRINTLN:
-                cv = vm->stack[sp].achar;
+                cv = vm->stack[sp].data.achar;
                 sp--;
                 printf("%c\n", cv);
                 break;
             case IGLOAD:
-                addr = vm->code[ip++].anint;
-                vm->stack[++sp].anint = vm->globals[addr].anint;
+                addr = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.anint = vm->globals[addr].data.anint;
                 break;
             case IGSTORE:
-                addr = vm->code[ip++].anint;
-                vm->globals[addr].anint = vm->stack[sp--].anint;
+                addr = vm->code[ip++].data.anint;
+                vm->globals[addr].data.anint = vm->stack[sp--].data.anint;
                 break;
             case ILOAD:
-                offset = vm->code[ip++].anint;
-                vm->stack[++sp].anint = vm->call_stack[callsp].locals[offset].anint;
+                offset = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.anint = vm->call_stack[callsp].locals[offset].data.anint;
                 break;
             case ISTORE:
-                offset = vm->code[ip++].anint;
-                vm->call_stack[callsp].locals[offset].anint = vm->stack[sp--].anint;
+                offset = vm->code[ip++].data.anint;
+                vm->call_stack[callsp].locals[offset].data.anint = vm->stack[sp--].data.anint;
                 break;
             case SGLOAD:
-                addr = vm->code[ip++].anint;
-                vm->stack[++sp].astring = vm->globals[addr].astring;
+                addr = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.astring = vm->globals[addr].data.astring;
                 break;
             case SGSTORE:
-                addr = vm->code[ip++].anint;
-                vm->globals[addr].astring = vm->stack[sp--].astring;
+                addr = vm->code[ip++].data.anint;
+                vm->globals[addr].data.astring = vm->stack[sp--].data.astring;
                 break;
             case SLOAD:
-                offset = vm->code[ip++].anint;
-                vm->stack[++sp].astring = vm->call_stack[callsp].locals[offset].astring;
+                offset = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.astring = vm->call_stack[callsp].locals[offset].data.astring;
                 break;
             case SSTORE:
-                offset = vm->code[ip++].anint;
-                vm->call_stack[callsp].locals[offset].astring = vm->stack[sp--].astring;
+                offset = vm->code[ip++].data.anint;
+                vm->call_stack[callsp].locals[offset].data.astring = vm->stack[sp--].data.astring;
                 break;
             case BGLOAD:
-                addr = vm->code[ip++].anint;
-                vm->stack[++sp].abool = vm->globals[addr].abool;
+                addr = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.abool = vm->globals[addr].data.abool;
                 break;
             case BGSTORE:
-                addr = vm->code[ip++].anint;
-                vm->globals[addr].abool = vm->stack[sp--].abool;
+                addr = vm->code[ip++].data.anint;
+                vm->globals[addr].data.abool = vm->stack[sp--].data.abool;
                 break;
             case BLOAD:
-                offset = vm->code[ip++].anint;
-                vm->stack[++sp].abool = vm->call_stack[callsp].locals[offset].abool;
+                offset = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.abool = vm->call_stack[callsp].locals[offset].data.abool;
                 break;
             case BSTORE:
-                offset = vm->code[ip++].anint;
-                vm->call_stack[callsp].locals[offset].abool = vm->stack[sp--].abool;
+                offset = vm->code[ip++].data.anint;
+                vm->call_stack[callsp].locals[offset].data.abool = vm->stack[sp--].data.abool;
                 break;
             case FGLOAD:
-                addr = vm->code[ip++].anint;
-                vm->stack[++sp].afloat = vm->globals[addr].afloat;
+                addr = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.afloat = vm->globals[addr].data.afloat;
                 break;
             case FGSTORE:
-                addr = vm->code[ip++].anint;
-                vm->globals[addr].afloat = vm->stack[sp--].afloat;
+                addr = vm->code[ip++].data.anint;
+                vm->globals[addr].data.afloat = vm->stack[sp--].data.afloat;
                 break;
             case FLOAD:
-                offset = vm->code[ip++].anint;
-                vm->stack[++sp].afloat = vm->call_stack[callsp].locals[offset].afloat;
+                offset = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.afloat = vm->call_stack[callsp].locals[offset].data.afloat;
                 break;
             case FSTORE:
-                offset = vm->code[ip++].anint;
-                vm->call_stack[callsp].locals[offset].afloat = vm->stack[sp--].afloat;
+                offset = vm->code[ip++].data.anint;
+                vm->call_stack[callsp].locals[offset].data.afloat = vm->stack[sp--].data.afloat;
                 break;
             case CGLOAD:
-                addr = vm->code[ip++].anint;
-                vm->stack[++sp].achar = vm->globals[addr].achar;
+                addr = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.achar = vm->globals[addr].data.achar;
                 break;
             case CGSTORE:
-                addr = vm->code[ip++].anint;
-                vm->globals[addr].achar = vm->stack[sp--].achar;
+                addr = vm->code[ip++].data.anint;
+                vm->globals[addr].data.achar = vm->stack[sp--].data.achar;
                 break;
             case CLOAD:
-                offset = vm->code[ip++].anint;
-                vm->stack[++sp].achar = vm->call_stack[callsp].locals[offset].achar;
+                offset = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.achar = vm->call_stack[callsp].locals[offset].data.achar;
                 break;
             case CSTORE:
-                offset = vm->code[ip++].anint;
-                vm->call_stack[callsp].locals[offset].achar = vm->stack[sp--].achar;
+                offset = vm->code[ip++].data.anint;
+                vm->call_stack[callsp].locals[offset].data.achar = vm->stack[sp--].data.achar;
                 break;
             case CALL:
-                addr = vm->code[ip++].anint;
-                int nargs = vm->code[ip++].anint;
-                int nlocals = vm->code[ip++].anint;
+                addr = vm->code[ip++].data.anint;
+                int nargs = vm->code[ip++].data.anint;
+                int nlocals = vm->code[ip++].data.anint;
                 ++callsp;
                 vm_context_init(&vm->call_stack[callsp], ip, nargs+nlocals);
                 for (int i=0; i<nargs; i++) {
-                    vm->call_stack[callsp].locals[i].anint = vm->stack[sp-i].anint;
+                    vm->call_stack[callsp].locals[i].data.anint = vm->stack[sp-i].data.anint;
                 }
                 sp -= nargs;
                 ip = addr;
@@ -582,17 +590,17 @@ int vm_exec(VM *vm, int startip, bool trace){
                 callsp--;
                 break;
             case BR:
-                ip = vm->code[ip++].anint;
+                ip = vm->code[ip++].data.anint;
                 break;
             case BRT:
-                addr = vm->code[ip++].anint;
-                if (vm->stack[sp--].abool == true) {
+                addr = vm->code[ip++].data.anint;
+                if (vm->stack[sp--].data.abool == true) {
                     ip = addr;
                 }
                 break;
             case BRF:
-                addr = vm->code[ip++].anint;
-                if (vm->stack[sp--].abool == false){
+                addr = vm->code[ip++].data.anint;
+                if (vm->stack[sp--].data.abool == false){
                     ip = addr;
                 }
                 break;
@@ -609,7 +617,7 @@ int vm_exec(VM *vm, int startip, bool trace){
         if (trace){
             vm_print_stack(vm->stack, sp);
         }
-        opcode = vm->code[ip].anint;
+        opcode = vm->code[ip].data.anint;
     }
 }
 
@@ -623,7 +631,7 @@ static void vm_context_init(Context *ctx, int ip, int nlocals) {
 int vm_print_data(struct stack_base *globals, int count){
     printf("Data memory:\n");
     for (int i = 0; i < count; i++) {
-        printf("%04d: %d\n", i, globals[i].anint);
+        printf("%04d: %d\n", i, globals[i].data.anint);
     }
     return 0;
 }

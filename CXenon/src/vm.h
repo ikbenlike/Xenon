@@ -1,5 +1,5 @@
 /*
-    CXenon VM v0.0.3
+    CXenon VM v0.0.5
 */
 
 #ifndef VM_H_
@@ -77,25 +77,28 @@ typedef enum {
     FLOAD =      57,         // float load
     FSTORE =     58,         // float store
     CCONST =     59,         // char constant
-    CEQ =        60,         // char equals
-    CNEQ =       61,         // char not equals
-    CPRINT =     62,         // char print
-    CPRINTLN =   63,         // char print with trailing newline
+    CPRINT =     60,         // char print
+    CPRINTLN =   61,         // char print with trailing newline
+    CEQ =        62,         // char equals
+    CNEQ =       63,         // char not equals
     CGLOAD =     64,         // char global load
     CGSTORE =    65,         // char global store
     CLOAD =      66,         // char load
     CSTORE =     67,         // char store
-    HALT =       68          // exit program
+    HALT =       69          // exit program
 } VM_CODE;
 
 
 
 struct stack_base{
-    char* astring;
-    char achar;
-    int anint;
-    float afloat;
-    bool abool;
+    char type[6];
+    struct {
+        char* astring;
+        char achar;
+        int anint;
+        float afloat;
+        bool abool;
+    } data;
 };
 
 
