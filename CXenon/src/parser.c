@@ -17,7 +17,7 @@ int parse(char* file_to_parse) {
     mpc_parser_t* Character = mpc_new("character");
     mpc_parser_t* String    = mpc_new("string");
     mpc_parser_t* Boolean   = mpc_new("boolean");
-    mpc_parser_t* Comment   = mpc_new("comment");
+    mpc_parser_t* Print     = mpc_new("print");
     mpc_parser_t* Factor    = mpc_new("factor");
     mpc_parser_t* Term      = mpc_new("term");
     mpc_parser_t* Lexp      = mpc_new("lexp");
@@ -39,7 +39,7 @@ int parse(char* file_to_parse) {
         " string    : /\"(\\\\.|[^\"])*\"/ ;                                                                        \n"
         " boolean   : /true | false/ ;                                                                      \n"
         "                                                                                                           \n"
-        " comment   : /\\/\\*.*\\*\\// ;                                                                               \n"
+        " print     : /\"print\" (<ident> | <string>)/ ;                                                                               \n"
         " factor    : '(' <lexp> ')'                                                                                \n"
         "           | <number>                                                                                      \n"
         "           | <character>                                                                                   \n"
@@ -75,10 +75,27 @@ int parse(char* file_to_parse) {
         " args      : <typeident>? (',' <typeident>)* ;                                                             \n"
         " body      : '{' <decls> <stmt>* '}' ;                                                                     \n"
         " procedure : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) ':' <ident> '(' <args> ')' <body> ;    \n"
-        " use       : (\"use\" <string>)* ;                                                                         \n"
+        " use       : (\"use\" /[a-zA-Z_\\/\\.][a-zA-Z0-9_\\/\\.]*/)* ;                                                                         \n"
         " xenon     : /^/ <use> <decls> <procedure>* /$/ ;                                                          \n",
-        Ident, Number, Character, String, Boolean, Comment, Factor, Term, Lexp, Index, Stmt, Exp,
+        Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,
         Typeident, Decls, Args, Body, Procedure, Use, Xenon, NULL);
+
+    /*
+        use `@` as namespace separator
+        stuff@thing();
+
+        use `=>` to change variable type
+        and contents
+        ```
+        str stuff = "stuff";
+        stuff=>int = 1;
+        ```
+        and this to dynamically change the type:
+        ```
+        str stuff = "stuff";
+        stuff=>let = a_func(a_var);
+        ```
+    */
 
     if (err != NULL) {
         mpc_err_print(err);
@@ -95,7 +112,7 @@ int parse(char* file_to_parse) {
         mpc_err_delete(r.error);
     }
 
-    mpc_cleanup(19, Ident, Number, Character, String, Boolean, Comment, Factor, Term, Lexp, Index, Stmt, Exp,
+    mpc_cleanup(19, Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,
                   Typeident, Decls, Args, Body, Procedure, Use, Xenon);
 
     return 0;

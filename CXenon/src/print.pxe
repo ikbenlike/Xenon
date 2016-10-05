@@ -1,0 +1,3 @@
+int:print(str string_to_print){
+    print("okay\n");
+}

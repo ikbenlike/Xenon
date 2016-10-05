@@ -94,12 +94,14 @@ int main(void){
     vm_add_char_to_stack(hellochar, 'i', 7);
     vm_add_opcode_to_stack(hellochar, CPRINTLN, 8);
     vm_add_opcode_to_stack(hellochar, SCONST, 9);
-    vm_add_string_to_stack(hellochar, "and I'm too lazy to do the rest", 10);
-    vm_add_opcode_to_stack(hellochar, SPRINTLN, 11);
+    vm_add_string_to_stack(hellochar, vm_parse_string("\"okay\n\n\""), 10);
+    vm_add_opcode_to_stack(hellochar, SPRINT, 11);
     vm_add_opcode_to_stack(hellochar, HALT, 12);
     vm = vm_create(hellochar, sizeof(hellochar), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
+    printf("fuck\n");
+    printf("%s", vm_parse_string("\"stuff\n\""));
     struct stack_base get_input[6];
     vm_add_opcode_to_stack(get_input, SCONST, 0);
     vm_add_string_to_stack(get_input, "enter some input: ", 1);
