@@ -4,4 +4,4 @@
 
 #include "mpc/mpc.h"
 
-int parse(char* file_to_parse);
+mpc_ast_t* parse(char* file_to_parse);
