@@ -10,7 +10,7 @@
 #include "parser.h"
 #include "mpc/mpc.h"
 
-mpc_ast_t* parse(char* file_to_parse) {
+mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
 
     mpc_parser_t* Ident     = mpc_new("ident");
     mpc_parser_t* Number    = mpc_new("number");
@@ -55,7 +55,6 @@ mpc_ast_t* parse(char* file_to_parse) {
         "           | \"if\"    '(' <exp> ')' <stmt>                                                                \n"
         "           | \"loop\" <stmt>                                                                               \n"
         "           | <ident> '=' <lexp> <index>* ';'                                                               \n"
-        "           | \"print\" '(' <lexp>? ')' ';'                                                                 \n"
         "           | \"return\" <lexp>? ';'                                                                        \n"
         "           | <ident> <index>* ';'                                                                          \n"
         "           | <ident> '(' <ident>? (',' <ident>)* ')' <index>* ';';                                         \n"
@@ -71,7 +70,7 @@ mpc_ast_t* parse(char* file_to_parse) {
         " typeident : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) <ident> ;                              \n"
         " decls     : (<typeident> '=' ( <number> | <character> | <string> | <boolean> | <term> ) <index>* ';')* ;  \n"
         " args      : <typeident>? (',' <typeident>)* ;                                                             \n"
-        " body      : '{' <decls> <stmt>* '}' ;                                                                     \n"
+        " body      : '{' (<decls> <stmt>)* '}' ;                                                                     \n"
         " procedure : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) ':' <ident> '(' <args> ')' <body> ;    \n"
         " use       : (\"use\" <string>)* ;                                                                         \n"
         " xenon     : /^/ <use> <decls> <procedure>* /$/ ;                                                          \n",
@@ -86,13 +85,14 @@ mpc_ast_t* parse(char* file_to_parse) {
 
     mpc_ast_t* ast;
     mpc_result_t r;
-    if (mpc_parse_contents(file_to_parse, Xenon, &r)) {
+    if (mpc_parse(file_to_parse, string_to_parse, Xenon, &r)) {
         ast = r.output;
         //mpc_ast_print(r.output);
-        mpc_ast_delete(r.output);
+        //mpc_ast_delete(r.output);
     } else {
         mpc_err_print(r.error);
         mpc_err_delete(r.error);
+        exit(1);
     }
 
     mpc_cleanup(18, Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Index, Stmt, Exp,
