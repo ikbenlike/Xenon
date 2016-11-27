@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include "parser.h"
+#include "preprocessor.h"
 
 int main(int argc, char **argv){
     if (argc < 2){
@@ -17,7 +18,7 @@ int main(int argc, char **argv){
         return 0;
     }
     else {
-        parse(argv[1]);
+        parse(argv[1], preprocessor(argv[1]));
         return 0;
     }
 }

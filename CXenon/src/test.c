@@ -2,7 +2,7 @@
 *    CXenon VM v0.0.5
 */
 
-// compile with: "gcc test.c vm.c types.c -std=c99 "
+// compile with: "gcc test.c vm.c types.c --std=c99 "
 
 #include <stdio.h>
 #include <stdlib.h>
