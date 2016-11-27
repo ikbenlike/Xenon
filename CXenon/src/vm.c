@@ -1,5 +1,5 @@
 /*
-*    CXenon VM v0.0.3
+*    CXenon VM v0.0.5
 */
 
 #include <stdio.h>
@@ -77,7 +77,16 @@ static VM_INSTRUCTION vm_instructions[] = {
     { "fgstore",  1 },    // 56
     { "fload",    1 },    // 57
     { "fstore",   1 },    // 58
-    { "halt",     0 }     // 59
+    { "cconst",   1 },    // 59
+    { "cprint",   0 },    // 60
+    { "cprintln", 0 },    // 61
+    { "ceq",      0 },    // 62
+    { "cneq",     0 },    // 63
+    { "cgload",   1 },    // 64
+    { "cgstore",  1 },    // 65
+    { "cload",    1 },    // 66
+    { "cstore",   1 },    // 67
+    { "halt",     0 }     // 68
 };
 
 
@@ -154,6 +163,8 @@ int vm_exec(VM *vm, int startip, bool trace){
     char* sv;
     char sa[1000];
     char sb[1000];
+    char cv, ca, cb;
+    char* si;
 
     int size = sizeof(vm->code); // declares size of code
 
@@ -407,6 +418,32 @@ int vm_exec(VM *vm, int startip, bool trace){
                     strcpy(sb, "\0");
                     break;
                 }
+            case CCONST:
+                cv = vm->code[ip].data.achar;
+                ip++;
+                sp++;
+                vm->stack[sp].data.achar = cv;
+                break;
+            case CEQ:
+                cb = vm->stack[sp--].data.achar;
+                ca = vm->stack[sp--].data.achar;
+                if(ca == cb){
+                    vm->stack[++sp].data.abool = true;
+                }
+                else {
+                    vm->stack[++sp].data.abool = false;
+                }
+                break;
+            case CNEQ:
+                cb = vm->stack[sp--].data.achar;
+                ca = vm->stack[sp--].data.achar;
+                if(ca != cb){
+                    vm->stack[++sp].data.abool = true;
+                }
+                else {
+                    vm->stack[++sp].data.abool = false;
+                }
+                break;
             case IPRINT:
                 v = vm->stack[sp].data.anint;
                 sp--;
@@ -446,6 +483,34 @@ int vm_exec(VM *vm, int startip, bool trace){
                 sv = vm->stack[sp].data.astring;
                 sp--;
                 printf("%s\n", sv);
+                break;
+            case CPRINT:
+                cv = vm->stack[sp].data.achar;
+                sp--;
+                printf("%c", cv);
+                break;
+            case CPRINTLN:
+                cv = vm->stack[sp].data.achar;
+                sp--;
+                printf("%c\n", cv);
+                break;
+            case INPUT:
+                sp++;
+                a = 0;
+                si = malloc(sizeof(char) * 1000);
+                fflush(stdin);
+                while(1){
+                    si[a] = getchar();
+                    if(a >= sizeof(si)){
+                        si = realloc(si, sizeof(si) + 10);
+                    }
+                    if(si[a] == '\n'){
+                        si[a] = '\0';
+                        break;
+                    }
+                    a++;
+                }
+                vm->stack[sp].data.astring = si;
                 break;
             case IGLOAD:
                 addr = vm->code[ip++].data.anint;
@@ -510,6 +575,22 @@ int vm_exec(VM *vm, int startip, bool trace){
             case FSTORE:
                 offset = vm->code[ip++].data.anint;
                 vm->call_stack[callsp].locals[offset].data.afloat = vm->stack[sp--].data.afloat;
+                break;
+            case CGLOAD:
+                addr = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.achar = vm->globals[addr].data.achar;
+                break;
+            case CGSTORE:
+                addr = vm->code[ip++].data.anint;
+                vm->globals[addr].data.achar = vm->stack[sp--].data.achar;
+                break;
+            case CLOAD:
+                offset = vm->code[ip++].data.anint;
+                vm->stack[++sp].data.achar = vm->call_stack[callsp].locals[offset].data.achar;
+                break;
+            case CSTORE:
+                offset = vm->code[ip++].data.anint;
+                vm->call_stack[callsp].locals[offset].data.achar = vm->stack[sp--].data.achar;
                 break;
             case CALL:
                 addr = vm->code[ip++].data.anint;

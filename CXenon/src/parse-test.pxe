@@ -1,8 +1,12 @@
-use "stdio.h"
+use /home/thewatcher/Programming/C/Xenon/CXenon/src/print.pxe
 
-float:fib() {
-    if (n == 0) { return 0; }
-    if (n == 1) { return 1; }
+float:fib(int n){
+    if (n == 0){
+        return 0;
+    }
+    if (n == 1){
+        return 1;
+    }
     return fib(n - 1) + fib(n - 2);
 }
 

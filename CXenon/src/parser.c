@@ -1,5 +1,5 @@
 /*
-    CXenon VM v0.0.3
+    CXenon VM v0.0.5
 */
 
 #include <stdio.h>
@@ -11,12 +11,12 @@
 #include "mpc/mpc.h"
 
 mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
-
     mpc_parser_t* Ident     = mpc_new("ident");
     mpc_parser_t* Number    = mpc_new("number");
     mpc_parser_t* Character = mpc_new("character");
     mpc_parser_t* String    = mpc_new("string");
     mpc_parser_t* Boolean   = mpc_new("boolean");
+    mpc_parser_t* Print     = mpc_new("print");
     mpc_parser_t* Factor    = mpc_new("factor");
     mpc_parser_t* Term      = mpc_new("term");
     mpc_parser_t* Lexp      = mpc_new("lexp");
@@ -36,8 +36,9 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         " number    : /-?[0-9]+(\\.[0-9]*)?/ ;                                                                      \n"
         " character : /'.' | \".\"/ ;                                                                               \n"
         " string    : /\"(\\\\.|[^\"])*\"/ ;                                                                        \n"
-        " boolean   : /\"true\" | \"false\"/ ;                                                                      \n"
+        " boolean   : /true | false/ ;                                                                      \n"
         "                                                                                                           \n"
+        " print     : /\"print\" (<ident> | <string>)/ ;                                                                               \n"
         " factor    : '(' <lexp> ')'                                                                                \n"
         "           | <number>                                                                                      \n"
         "           | <character>                                                                                   \n"
@@ -70,12 +71,29 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         " typeident : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) <ident> ;                              \n"
         " decls     : (<typeident> '=' ( <number> | <character> | <string> | <boolean> | <term> ) <index>* ';')* ;  \n"
         " args      : <typeident>? (',' <typeident>)* ;                                                             \n"
-        " body      : '{' (<decls> <stmt>)* '}' ;                                                                     \n"
+        " body      : '{' (<decls> | <stmt>)* '}' ;                                                                     \n"
         " procedure : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) ':' <ident> '(' <args> ')' <body> ;    \n"
-        " use       : (\"use\" <string>)* ;                                                                         \n"
+        " use       : (\"use\" /[a-zA-Z_\\/\\.][a-zA-Z0-9_\\/\\.]*/)* ;                                                                         \n"
         " xenon     : /^/ <use> <decls> <procedure>* /$/ ;                                                          \n",
-        Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Index, Stmt, Exp,
+        Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,
         Typeident, Decls, Args, Body, Procedure, Use, Xenon, NULL);
+
+    /*
+        use `@` as namespace separator
+        stuff@thing();
+
+        use `=>` to change variable type
+        and contents
+        ```
+        str stuff = "stuff";
+        stuff=>int = 1;
+        ```
+        and this to dynamically change the type:
+        ```
+        str stuff = "stuff";
+        stuff=>let = a_func(a_var);
+        ```
+    */
 
     if (err != NULL) {
         mpc_err_print(err);
@@ -83,8 +101,8 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         exit(1);
     }
 
-    mpc_ast_t* ast;
     mpc_result_t r;
+    mpc_ast_t *ast;
     if (mpc_parse(file_to_parse, string_to_parse, Xenon, &r)) {
         ast = r.output;
         //mpc_ast_print(r.output);
@@ -95,7 +113,7 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         exit(1);
     }
 
-    mpc_cleanup(18, Ident, Number, Character, String, Boolean, Factor, Term, Lexp, Index, Stmt, Exp,
+    mpc_cleanup(19, Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,
                   Typeident, Decls, Args, Body, Procedure, Use, Xenon);
 
     return ast;

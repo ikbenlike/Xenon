@@ -1,5 +1,5 @@
 /*
-    CXenon VM v0.0.3
+    CXenon VM v0.0.5
 */
 
 #ifndef VM_H_
@@ -76,7 +76,17 @@ typedef enum {
     FGSTORE =    56,         // float global store
     FLOAD =      57,         // float load
     FSTORE =     58,         // float store
-    HALT =       59          // exit program
+    CCONST =     59,         // char constant
+    CPRINT =     60,         // char print
+    CPRINTLN =   61,         // char print with trailing newline
+    CEQ =        62,         // char equals
+    CNEQ =       63,         // char not equals
+    CGLOAD =     64,         // char global load
+    CGSTORE =    65,         // char global store
+    CLOAD =      66,         // char load
+    CSTORE =     67,         // char store
+    INPUT =      68,         // get input
+    HALT =       69          // exit program
 } VM_CODE;
 
 
