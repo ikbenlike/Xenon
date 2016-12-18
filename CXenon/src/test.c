@@ -124,7 +124,7 @@ int main(void){
     vm_add_func_to_stack(func_test, 3, func_body, 1);
     vm_add_opcode_to_stack(func_test, HALT, 2);
     //printf("%d\n", func_test[1].data.function->body[0]);
-    vm = vm_create(func_body, sizeof(func_body), 0);
+    vm = vm_create(func_test, sizeof(func_body), 0);
     //printf("%d\n", vm->code[1].data.function->body[0]);
     vm_exec(vm, 0, false);
     vm_free(vm);
