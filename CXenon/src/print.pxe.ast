@@ -1,0 +1,43 @@
+> 
+  regex 
+  procedure|> 
+    string:1:1 'int'
+    char:1:4 ':'
+    ident|regex:1:5 'stuff'
+    char:1:10 '('
+    args|typeident|> 
+      string:1:11 'str'
+      ident|regex:1:15 'string_to_print'
+    char:1:30 ')'
+    body|> 
+      char:1:31 '{'
+      decls|> 
+        typeident|> 
+          string:2:5 'int'
+          ident|regex:2:9 'alasfdk'
+        char:2:17 '='
+        number|regex:2:19 '1'
+        char:2:20 ';'
+        typeident|> 
+          string:3:5 'float'
+          ident|regex:3:11 'jKAHalskdjf'
+        char:3:23 '='
+        number|regex:3:25 '1.1'
+        char:3:28 ';'
+      stmt|> 
+        ident|regex:4:5 'puts'
+        char:4:9 '('
+        ident|regex:4:10 'stuff'
+        char:4:15 ')'
+        index|> 
+          char:4:16 '['
+          number|regex:4:17 '0'
+          char:4:18 ']'
+        char:4:19 ';'
+      stmt|> 
+        ident|regex:6:5 'alskjdf'
+        char:6:13 '='
+        lexp|term|factor|number|regex:6:15 '1.1'
+        char:6:18 ';'
+      char:7:1 '}'
+  regex 

@@ -17,6 +17,15 @@ extern "C" {
 
 
 
+#define XVOID_T 0
+#define XSTR_T 1
+#define XFLOAT_T 2
+#define XINT_T 3
+#define XCHAR_T 4
+#define XBOOL_T 5
+
+
+
 typedef enum {
     IADD =       1,          // integer add
     ISUB =       2,          // integer substract
@@ -91,6 +100,13 @@ typedef enum {
 
 
 
+typedef struct{
+    int body_len;
+    struct stack_base *body;
+} xabstract_func_t;
+
+
+
 struct stack_base{
     char type[6];
     struct {
@@ -99,6 +115,7 @@ struct stack_base{
         int anint;
         float afloat;
         bool abool;
+        xabstract_func_t *function;
     } data;
 };
 
@@ -115,11 +132,9 @@ typedef struct {
     struct stack_base *code;
     int code_size;
 
-    // global variable space
     struct stack_base *globals;
     int nglobals;
 
-    // Operand stack, grows upwards
     struct stack_base stack[DEFAULT_STACK_SIZE];
     Context call_stack[DEFAULT_CALL_STACK_SIZE];
 } VM;

@@ -1,4 +1,4 @@
-use /home/thewatcher/Programming/C/Xenon/CXenon/src/print.pxe
+//use /home/thewatcher/Programming/C/Xenon/CXenon/src/print.pxe
 
 float:fib(int n){
     if (n == 0){

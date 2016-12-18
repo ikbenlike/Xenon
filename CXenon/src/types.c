@@ -10,11 +10,11 @@
 #include "vm.h"
 
 char* vm_parse_string(char* str){
-    printf("%d", 1);
+    //printf("%d", 1);
     memmove(str, str+1, strlen(str)+1);
-    printf("%s", str);
+    //printf("%s", str);
     str[strlen(str) - 1] = '\0';
-    printf("%s", str);
+    //printf("%s", str);
     char* tmp = malloc((strlen(str)+1) * sizeof(char));
     strncpy(tmp, str, strlen(str)+1);
     for(int i = 1; i < strlen(str); i++){
@@ -37,8 +37,8 @@ char* vm_parse_string(char* str){
             }
         }
     }
-    printf("%s", str);
-    printf("%s", tmp);
+    //printf("%s", str);
+    //printf("%s", tmp);
     return str;
 }
 
@@ -75,6 +75,15 @@ int vm_add_bool_to_stack(struct stack_base* stack, bool value, int i){
 int vm_add_opcode_to_stack(struct stack_base* stack, int value, int i){
     strcpy(stack[i].type, "opcode");
     stack[i].data.anint = value;
+    return 0;
+}
+
+int vm_add_func_to_stack(struct stack_base* stack, int len, struct stack_base* body, int i){
+    strcpy(stack[i].type, "func");
+    stack[i].data.function = calloc(1, sizeof(xabstract_func_t));
+    stack[i].data.function->body = calloc(1, len * sizeof(struct stack_base));
+    memcpy(stack[i].data.function->body, body, len * sizeof(struct stack_base));
+    stack[i].data.function->body_len = len;
     return 0;
 }
 

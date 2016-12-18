@@ -13,7 +13,7 @@
 #include "types.h"
 
 int main(void){
-    struct stack_base loop[28];
+    /*struct stack_base loop[28];
     vm_add_opcode_to_stack(loop, ICONST, 0);
     vm_add_int_to_stack(loop, 10, 1);
     vm_add_opcode_to_stack(loop, IGSTORE, 2);
@@ -83,6 +83,8 @@ int main(void){
     vm = vm_create(hello, sizeof(hello), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
+    char *tmpstr = calloc(1, 10 * sizeof(char));
+    strcpy(tmpstr, "\"okay\n\n\"");
     struct stack_base hellochar[14];
     vm_add_opcode_to_stack(hellochar, SCONST, 0);
     vm_add_string_to_stack(hellochar, "and now with chars:", 1);
@@ -94,14 +96,15 @@ int main(void){
     vm_add_char_to_stack(hellochar, 'i', 7);
     vm_add_opcode_to_stack(hellochar, CPRINTLN, 8);
     vm_add_opcode_to_stack(hellochar, SCONST, 9);
-    vm_add_string_to_stack(hellochar, vm_parse_string("\"okay\n\n\""), 10);
+    vm_add_string_to_stack(hellochar, vm_parse_string(tmpstr), 10);
     vm_add_opcode_to_stack(hellochar, SPRINT, 11);
     vm_add_opcode_to_stack(hellochar, HALT, 12);
     vm = vm_create(hellochar, sizeof(hellochar), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
-    printf("fuck\n");
-    printf("%s", vm_parse_string("\"stuff\n\""));
+    free(tmpstr);
+    //printf("fuck\n");
+    //printf("%s", vm_parse_string("\"stuff\n\""));*/
     struct stack_base get_input[6];
     vm_add_opcode_to_stack(get_input, SCONST, 0);
     vm_add_string_to_stack(get_input, "enter some input: ", 1);
@@ -109,7 +112,20 @@ int main(void){
     vm_add_opcode_to_stack(get_input, INPUT, 3);
     vm_add_opcode_to_stack(get_input, SPRINTLN, 4);
     vm_add_opcode_to_stack(get_input, HALT, 5);
-    vm = vm_create(get_input, sizeof(get_input), 0);
+    VM *vm = vm_create(get_input, sizeof(get_input), 0);
+    vm_exec(vm, 0, false);
+    vm_free(vm);
+    struct stack_base func_body[3];
+    vm_add_opcode_to_stack(func_body, ICONST, 0);
+    vm_add_int_to_stack(func_body, 10, 1);
+    vm_add_opcode_to_stack(func_body, IPRINTLN, 2);
+    struct stack_base func_test[3];
+    vm_add_opcode_to_stack(func_test, CALL, 0);
+    vm_add_func_to_stack(func_test, 3, func_body, 1);
+    vm_add_opcode_to_stack(func_test, HALT, 2);
+    //printf("%d\n", func_test[1].data.function->body[0]);
+    vm = vm_create(func_body, sizeof(func_body), 0);
+    //printf("%d\n", vm->code[1].data.function->body[0]);
     vm_exec(vm, 0, false);
     vm_free(vm);
     return 0;

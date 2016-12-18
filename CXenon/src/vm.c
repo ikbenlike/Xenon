@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include "vm.h"
+#include "types.h"
 
 
 
@@ -96,7 +97,8 @@ static void vm_context_init(Context *ctx, int ip, int nlocals);
 
 
 int vm_init(VM *vm, struct stack_base *code, int code_size, int nglobals){
-    vm->code = code;
+    vm->code = calloc(1, sizeof(struct stack_base) * code_size);
+    memcpy(vm->code, code, code_size);
     vm->code_size = code_size;
     vm->globals = calloc(nglobals, sizeof(struct stack_base));
     vm->nglobals = nglobals;
@@ -166,12 +168,11 @@ int vm_exec(VM *vm, int startip, bool trace){
     char cv, ca, cb;
     char* si;
 
-    int size = sizeof(vm->code); // declares size of code
-
+    int size = sizeof(vm->code); 
     ip = startip;
     sp = -1;
     callsp = -1;
-    int opcode = vm->code[ip].data.anint; // fetch
+    int opcode = vm->code[ip].data.anint;
 
     while(1){
 
@@ -593,7 +594,7 @@ int vm_exec(VM *vm, int startip, bool trace){
                 vm->call_stack[callsp].locals[offset].data.achar = vm->stack[sp--].data.achar;
                 break;
             case CALL:
-                addr = vm->code[ip++].data.anint;
+                /*addr = vm->code[ip++].data.anint;
                 int nargs = vm->code[ip++].data.anint;
                 int nlocals = vm->code[ip++].data.anint;
                 ++callsp;
@@ -602,7 +603,14 @@ int vm_exec(VM *vm, int startip, bool trace){
                     vm->call_stack[callsp].locals[i].data.anint = vm->stack[sp-i].data.anint;
                 }
                 sp -= nargs;
-                ip = addr;
+                ip = addr;*/
+                puts("got called");
+                ip;
+                printf("%d : %s\n", ip, vm_get_type(vm->code, ip));
+                printf("%d %d\n", vm->code[ip].data.function->body[0], vm->code[ip].data.function->body[1]);
+                VM *tmp_vm = vm_create(vm->code[ip].data.function->body, vm->code[ip].data.function->body_len * sizeof(struct stack_base), 0);
+                vm_exec(tmp_vm, 0, false);
+                vm_free(tmp_vm);
                 break;
             case RET:
                 ip = vm->call_stack[callsp].returnip;
@@ -631,7 +639,7 @@ int vm_exec(VM *vm, int startip, bool trace){
                 break;
             default:
                 printf("invalid opcode: %d at ip=%d\n", opcode, (ip - 1));
-                exit(1);
+                return 1;
         }
         if (trace){
             vm_print_stack(vm->stack, sp);
