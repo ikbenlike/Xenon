@@ -92,7 +92,7 @@ static VM_INSTRUCTION vm_instructions[] = {
 
 
 
-static void vm_context_init(Context *ctx, int ip, int nlocals);
+
 
 
 
@@ -149,14 +149,14 @@ int vm_print_stack(struct stack_base *stack, int count){
 int vm_exec(VM *vm, int startip, bool trace){
 
     int ip; // instructionpointer
-    int fp; // framepointer
+    //int fp; // framepointer
     int sp; // stackpointer
     int callsp;
     int offset = 0;
     int v;
     int addr;
-    int nargs;
-    int rvalue;
+    //int nargs;
+    //int rvalue;
     int a, b;
     float fv;
     float fa, fb;
@@ -168,7 +168,7 @@ int vm_exec(VM *vm, int startip, bool trace){
     char cv, ca, cb;
     char* si;
 
-    int size = sizeof(vm->code);
+    //int size = sizeof(vm->code);
     ip = startip;
     sp = -1;
     callsp = -1;
@@ -320,7 +320,7 @@ int vm_exec(VM *vm, int startip, bool trace){
                     break;
                 }
             case BCONST:
-                bv = vm->code[ip].data.anint;
+                /*bv = vm->code[ip].data.abool;
                 ip++;
                 sp++;
                 if(bv == BTRUE){
@@ -330,7 +330,9 @@ int vm_exec(VM *vm, int startip, bool trace){
                 else if(bv == BFALSE){
                     vm->stack[sp].data.abool = false;
                     break;
-                }
+                }*/
+                vm->stack[++sp].data.abool = vm->code[ip++].data.abool;
+                break;
             case BNEQ:
                 bb = vm->stack[sp--].data.abool;
                 ba = vm->stack[sp--].data.abool;
@@ -603,14 +605,19 @@ int vm_exec(VM *vm, int startip, bool trace){
                     vm->call_stack[callsp].locals[i].data.anint = vm->stack[sp-i].data.anint;
                 }
                 sp -= nargs;
-                ip = addr;*/
-                puts("got called");
+                ip = addr;
+                puts("got called");/*
                 ip;
                 printf("%d : %s\n", ip, vm_get_type(vm->code, ip));
-                printf("%d %d\n", vm->code[ip].data.function->body[0].data.anint, vm->code[ip].data.function->body[2].data.anint);
+                printf("%d %d\n", vm->code[ip].data.function->body[0].data.anint, vm->code[ip].data.function->body[2].data.anint);*/
+                ;
                 VM *tmp_vm = vm_create(vm->code[ip].data.function->body, vm->code[ip].data.function->body_len * sizeof(struct stack_base), 0);
                 vm_exec(tmp_vm, 0, false);
                 vm_free(tmp_vm);
+                free(vm->code[ip].data.function->body);
+                free(vm->code[ip].data.function);
+                ip++;
+                printf("%d\n", vm->code[ip].type);
                 break;
             case RET:
                 ip = vm->call_stack[callsp].returnip;
@@ -648,7 +655,7 @@ int vm_exec(VM *vm, int startip, bool trace){
     }
 }
 
-static void vm_context_init(Context *ctx, int ip, int nlocals) {
+void vm_context_init(Context *ctx, int ip, int nlocals) {
     if ( nlocals>DEFAULT_NUM_LOCALS ) {
         fprintf(stderr, "too many locals requested: %d\n", nlocals);
     }

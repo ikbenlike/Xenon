@@ -17,6 +17,15 @@ extern "C" {
 
 
 
+typedef enum {
+    integer,
+    floating,
+    character,
+    string,
+    boolean,
+    opcode,
+    function
+} xtype;
 #define XVOID_T 0
 #define XSTR_T 1
 #define XFLOAT_T 2
@@ -60,8 +69,6 @@ typedef enum {
     BCONST =     31,         // boolean constant
     BEQ =        32,         // boolean equeals
     BNEQ =       33,         // boolean not equeals
-    BTRUE =      34,         // boolean true
-    BFALSE =     35,         // boolean false
     FPRINT =     36,         // float print
     FPRINTLN =   37,         // float print with trailing newline
     BPRINT =     38,         // boolean print
@@ -108,7 +115,7 @@ typedef struct{
 
 
 struct stack_base{
-    char type[6];
+    int type;
     struct {
         char* astring;
         char achar;
@@ -140,7 +147,7 @@ typedef struct {
 } VM;
 
 
-
+void vm_context_init(Context *ctx, int ip, int nlocals);
 VM *vm_create(struct stack_base *code, int code_size, int nglobals);
 int vm_free(VM *vm);
 int vm_init(VM *vm, struct stack_base *code, int code_size, int nglobals);

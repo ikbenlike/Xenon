@@ -42,44 +42,44 @@ char* vm_parse_string(char* str){
     return str;
 }
 
-int vm_add_int_to_stack(struct stack_base* stack, int value, int i){
-    strcpy(stack[i].type, "int");
+int vm_add_int_to_stack(struct stack_base *stack, int value, int i){
+    stack[i].type = integer;
     stack[i].data.anint = value;
     return 0;
 }
 
-int vm_add_string_to_stack(struct stack_base* stack, char* value, int i){
-    strcpy(stack[i].type, "string");
+int vm_add_string_to_stack(struct stack_base *stack, char* value, int i){
+    stack[i].type = string;
     stack[i].data.astring = value;
     return 0;
 }
 
-int vm_add_char_to_stack(struct stack_base* stack, char value, int i){
-    strcpy(stack[i].type, "char");
+int vm_add_char_to_stack(struct stack_base *stack, char value, int i){
+    stack[i].type = character;
     stack[i].data.achar = value;
     return 0;
 }
 
-int vm_add_float_to_stack(struct stack_base* stack, char value, int i){
-    strcpy(stack[i].type, "float");
+int vm_add_float_to_stack(struct stack_base *stack, char value, int i){
+    stack[i].type = floating;
     stack[i].data.afloat = value;
     return 0;
 }
 
-int vm_add_bool_to_stack(struct stack_base* stack, bool value, int i){
-    strcpy(stack[i].type, "bool");
+int vm_add_bool_to_stack(struct stack_base *stack, bool value, int i){
+    stack[i].type = boolean;
     stack[i].data.abool = value;
     return 0;
 }
 
-int vm_add_opcode_to_stack(struct stack_base* stack, int value, int i){
-    strcpy(stack[i].type, "opcode");
+int vm_add_opcode_to_stack(struct stack_base *stack, int value, int i){
+    stack[i].type = opcode;
     stack[i].data.anint = value;
     return 0;
 }
 
-int vm_add_func_to_stack(struct stack_base* stack, int len, struct stack_base* body, int i){
-    strcpy(stack[i].type, "func");
+int vm_add_func_to_stack(struct stack_base *stack, int len, struct stack_base* body, int i){
+    stack[i].type = function;
     stack[i].data.function = calloc(1, sizeof(xabstract_func_t));
     stack[i].data.function->body = calloc(1, len * sizeof(struct stack_base));
     memcpy(stack[i].data.function->body, body, len * sizeof(struct stack_base));
@@ -87,6 +87,6 @@ int vm_add_func_to_stack(struct stack_base* stack, int len, struct stack_base* b
     return 0;
 }
 
-char* vm_get_type(struct stack_base* stack, int i){
+int vm_get_type(struct stack_base *stack, int i){
     return stack[i].type;
 }

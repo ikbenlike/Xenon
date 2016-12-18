@@ -121,12 +121,13 @@ int main(void){
     vm_add_opcode_to_stack(func_body, IPRINTLN, 2);
     vm_add_opcode_to_stack(func_body, HALT, 3);
     struct stack_base func_test[3];
-    vm_add_opcode_to_stack(func_test, CALL, 0);
+    vm_add_opcode_to_stack(func_test, 18, 0);
+    //printf("%d\n", func_test[0].data.anint);
     vm_add_func_to_stack(func_test, 3, func_body, 1);
     vm_add_opcode_to_stack(func_test, HALT, 2);
-    //printf("%d\n", func_test[1].data.function->body[0]);
+    printf("%d\n", func_test[1].data.function->body[3].data.anint);
     VM *vm = vm_create(func_test, sizeof(func_body) + sizeof(func_test), 0);
-    //printf("%d\n", vm->code[1].data.function->body[0]);
+    //printf("%d\n", vm->code[0].data.anint);
     vm_exec(vm, 0, false);
     vm_free(vm);
     return 0;
