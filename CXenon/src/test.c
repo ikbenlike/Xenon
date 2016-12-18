@@ -105,7 +105,7 @@ int main(void){
     free(tmpstr);
     //printf("fuck\n");
     //printf("%s", vm_parse_string("\"stuff\n\""));*/
-    struct stack_base get_input[6];
+    /*struct stack_base get_input[6];
     vm_add_opcode_to_stack(get_input, SCONST, 0);
     vm_add_string_to_stack(get_input, "enter some input: ", 1);
     vm_add_opcode_to_stack(get_input, SPRINT, 2);
@@ -114,17 +114,18 @@ int main(void){
     vm_add_opcode_to_stack(get_input, HALT, 5);
     VM *vm = vm_create(get_input, sizeof(get_input), 0);
     vm_exec(vm, 0, false);
-    vm_free(vm);
-    struct stack_base func_body[3];
+    vm_free(vm);*/
+    struct stack_base func_body[4];
     vm_add_opcode_to_stack(func_body, ICONST, 0);
     vm_add_int_to_stack(func_body, 10, 1);
     vm_add_opcode_to_stack(func_body, IPRINTLN, 2);
+    vm_add_opcode_to_stack(func_body, HALT, 3);
     struct stack_base func_test[3];
     vm_add_opcode_to_stack(func_test, CALL, 0);
     vm_add_func_to_stack(func_test, 3, func_body, 1);
     vm_add_opcode_to_stack(func_test, HALT, 2);
     //printf("%d\n", func_test[1].data.function->body[0]);
-    vm = vm_create(func_test, sizeof(func_body), 0);
+    VM *vm = vm_create(func_test, sizeof(func_body) + sizeof(func_test), 0);
     //printf("%d\n", vm->code[1].data.function->body[0]);
     vm_exec(vm, 0, false);
     vm_free(vm);

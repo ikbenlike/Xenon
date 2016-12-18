@@ -168,7 +168,7 @@ int vm_exec(VM *vm, int startip, bool trace){
     char cv, ca, cb;
     char* si;
 
-    int size = sizeof(vm->code); 
+    int size = sizeof(vm->code);
     ip = startip;
     sp = -1;
     callsp = -1;
@@ -607,7 +607,7 @@ int vm_exec(VM *vm, int startip, bool trace){
                 puts("got called");
                 ip;
                 printf("%d : %s\n", ip, vm_get_type(vm->code, ip));
-                printf("%d %d\n", vm->code[ip].data.function->body[0], vm->code[ip].data.function->body[1]);
+                printf("%d %d\n", vm->code[ip].data.function->body[0].data.anint, vm->code[ip].data.function->body[2].data.anint);
                 VM *tmp_vm = vm_create(vm->code[ip].data.function->body, vm->code[ip].data.function->body_len * sizeof(struct stack_base), 0);
                 vm_exec(tmp_vm, 0, false);
                 vm_free(tmp_vm);
