@@ -18,20 +18,20 @@ extern "C" {
 
 
 typedef enum {
-    integer,
-    floating,
-    character,
-    string,
-    boolean,
-    opcode,
-    function
-} xtype;
-#define XVOID_T 0
-#define XSTR_T 1
-#define XFLOAT_T 2
-#define XINT_T 3
-#define XCHAR_T 4
-#define XBOOL_T 5
+    x_integer,
+    x_floating,
+    x_character,
+    x_string,
+    x_boolean,
+    x_opcode,
+    x_function,
+    x_void
+} x_type;
+
+typedef enum {
+    x_native_t,
+    x_foreign_t
+} x_func_t;
 
 
 
@@ -108,8 +108,12 @@ typedef enum {
 
 
 typedef struct{
-    int body_len;
-    struct stack_base *body;
+    int addr;
+    int nargs;
+    int nlocals;
+    int xret_t;
+    int xfunc_t;
+    char *name;
 } xabstract_func_t;
 
 
@@ -122,7 +126,7 @@ struct stack_base{
         int anint;
         float afloat;
         bool abool;
-        xabstract_func_t *function;
+        xabstract_func_t func;
     } data;
 };
 

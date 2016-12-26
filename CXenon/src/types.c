@@ -43,47 +43,50 @@ char* vm_parse_string(char* str){
 }
 
 int vm_add_int_to_stack(struct stack_base *stack, int value, int i){
-    stack[i].type = integer;
+    stack[i].type = x_integer;
     stack[i].data.anint = value;
     return 0;
 }
 
 int vm_add_string_to_stack(struct stack_base *stack, char* value, int i){
-    stack[i].type = string;
+    stack[i].type = x_string;
     stack[i].data.astring = value;
     return 0;
 }
 
 int vm_add_char_to_stack(struct stack_base *stack, char value, int i){
-    stack[i].type = character;
+    stack[i].type = x_character;
     stack[i].data.achar = value;
     return 0;
 }
 
 int vm_add_float_to_stack(struct stack_base *stack, char value, int i){
-    stack[i].type = floating;
+    stack[i].type = x_floating;
     stack[i].data.afloat = value;
     return 0;
 }
 
 int vm_add_bool_to_stack(struct stack_base *stack, bool value, int i){
-    stack[i].type = boolean;
+    stack[i].type = x_boolean;
     stack[i].data.abool = value;
     return 0;
 }
 
 int vm_add_opcode_to_stack(struct stack_base *stack, int value, int i){
-    stack[i].type = opcode;
+    stack[i].type = x_opcode;
     stack[i].data.anint = value;
     return 0;
 }
 
-int vm_add_func_to_stack(struct stack_base *stack, int len, struct stack_base* body, int i){
-    stack[i].type = function;
-    stack[i].data.function = calloc(1, sizeof(xabstract_func_t));
-    stack[i].data.function->body = calloc(1, len * sizeof(struct stack_base));
-    memcpy(stack[i].data.function->body, body, len * sizeof(struct stack_base));
-    stack[i].data.function->body_len = len;
+int vm_add_func_to_stack(struct stack_base *stack, int addr, int nargs, int nlocals, int xret_t, int xfunc_t, char *name, int i){
+    stack[i].type = x_function;
+    stack[i].data.func.addr = addr;
+    stack[i].data.func.nargs = nargs;
+    stack[i].data.func.nlocals = nlocals;
+    stack[i].data.func.xret_t = xret_t;
+    stack[i].data.func.xfunc_t = xfunc_t;
+    stack[i].data.func.name = calloc(1, (strlen(name) + 1) * sizeof(char));
+    strncpy(stack[i].data.func.name, name, strlen(name) + 1);
     return 0;
 }
 

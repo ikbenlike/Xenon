@@ -596,28 +596,26 @@ int vm_exec(VM *vm, int startip, bool trace){
                 vm->call_stack[callsp].locals[offset].data.achar = vm->stack[sp--].data.achar;
                 break;
             case CALL:
-                /*addr = vm->code[ip++].data.anint;
-                int nargs = vm->code[ip++].data.anint;
-                int nlocals = vm->code[ip++].data.anint;
-                ++callsp;
-                vm_context_init(&vm->call_stack[callsp], ip, nargs+nlocals);
-                for (int i=0; i<nargs; i++) {
-                    vm->call_stack[callsp].locals[i].data.anint = vm->stack[sp-i].data.anint;
+                puts("got called");
+                if(vm->code[ip].data.func.xfunc_t == x_native_t){
+                    addr = vm->code[ip].data.func.addr;
+                    int nargs = vm->code[ip].data.func.nargs;
+                    int nlocals = vm->code[ip].data.func.nlocals;
+                    ++callsp;
+                    vm_context_init(&vm->call_stack[callsp], ip, nargs+nlocals);
+                    for(int i=0; i<nargs; i++){
+                        vm->call_stack[callsp].locals[i].data = vm->stack[sp-i].data;
+                    }
+                    sp -= nargs;
+                    ip = addr;
                 }
-                sp -= nargs;
-                ip = addr;
-                puts("got called");/*
-                ip;
-                printf("%d : %s\n", ip, vm_get_type(vm->code, ip));
-                printf("%d %d\n", vm->code[ip].data.function->body[0].data.anint, vm->code[ip].data.function->body[2].data.anint);*/
-                ;
-                VM *tmp_vm = vm_create(vm->code[ip].data.function->body, vm->code[ip].data.function->body_len * sizeof(struct stack_base), 0);
-                vm_exec(tmp_vm, 0, false);
-                vm_free(tmp_vm);
-                free(vm->code[ip].data.function->body);
-                free(vm->code[ip].data.function);
-                ip++;
-                printf("%d\n", vm->code[ip].type);
+                else if(vm->code[ip].data.func.xfunc_t == x_foreign_t){
+                    
+                }
+                else{
+                    puts("A fatal error occured");
+                    exit(1);
+                }
                 break;
             case RET:
                 ip = vm->call_stack[callsp].returnip;
