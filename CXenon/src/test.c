@@ -13,7 +13,7 @@
 #include "types.h"
 
 int main(void){
-    /*struct stack_base loop[28];
+    struct stack_base loop[28];
     vm_add_opcode_to_stack(loop, ICONST, 0);
     vm_add_int_to_stack(loop, 10, 1);
     vm_add_opcode_to_stack(loop, IGSTORE, 2);
@@ -57,21 +57,22 @@ int main(void){
     vm_add_opcode_to_stack(f, ICONST, 0);
     vm_add_int_to_stack(f, 10, 1);
     vm_add_opcode_to_stack(f, CALL, 2);
-    vm_add_int_to_stack(f, 8, 3);
+    vm_add_func_to_stack(f, 6, 1, 1, x_void, x_native_t, 3);
+    /*vm_add_int_to_stack(f, 8, 3);
     vm_add_int_to_stack(f, 1, 4);
-    vm_add_int_to_stack(f, 1, 5);
-    vm_add_opcode_to_stack(f, IPRINTLN, 6);
-    vm_add_opcode_to_stack(f, HALT, 7);
-    vm_add_opcode_to_stack(f, ILOAD, 8);
-    vm_add_int_to_stack(f, 0, 9);
-    vm_add_opcode_to_stack(f, ISTORE, 10);
+    vm_add_int_to_stack(f, 1, 5);*/
+    vm_add_opcode_to_stack(f, IPRINTLN, 4);
+    vm_add_opcode_to_stack(f, HALT, 5);
+    vm_add_opcode_to_stack(f, ILOAD, 6);
+    vm_add_int_to_stack(f, 0, 7);
+    vm_add_opcode_to_stack(f, ISTORE, 8);
+    vm_add_int_to_stack(f, 1, 9);
+    vm_add_opcode_to_stack(f, ILOAD, 10);
     vm_add_int_to_stack(f, 1, 11);
-    vm_add_opcode_to_stack(f, ILOAD, 12);
-    vm_add_int_to_stack(f, 1, 13);
-    vm_add_opcode_to_stack(f, ICONST, 14);
-    vm_add_int_to_stack(f, 2, 15);
-    vm_add_opcode_to_stack(f, IMUL, 16);
-    vm_add_opcode_to_stack(f, RET, 17);
+    vm_add_opcode_to_stack(f, ICONST, 12);
+    vm_add_int_to_stack(f, 2, 13);
+    vm_add_opcode_to_stack(f, IMUL, 14);
+    vm_add_opcode_to_stack(f, RET, 15);
     vm = vm_create(f, sizeof(f), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
@@ -103,34 +104,25 @@ int main(void){
     vm_exec(vm, 0, false);
     vm_free(vm);
     free(tmpstr);
-    //printf("fuck\n");
-    //printf("%s", vm_parse_string("\"stuff\n\""));*/
-    /*struct stack_base get_input[6];
+    struct stack_base get_input[6];
     vm_add_opcode_to_stack(get_input, SCONST, 0);
     vm_add_string_to_stack(get_input, "enter some input: ", 1);
     vm_add_opcode_to_stack(get_input, SPRINT, 2);
     vm_add_opcode_to_stack(get_input, INPUT, 3);
     vm_add_opcode_to_stack(get_input, SPRINTLN, 4);
     vm_add_opcode_to_stack(get_input, HALT, 5);
-    VM *vm = vm_create(get_input, sizeof(get_input), 0);
+    vm = vm_create(get_input, sizeof(get_input), 0);
     vm_exec(vm, 0, false);
-    vm_free(vm);*/
-    /*struct stack_base func_body[4];
-    vm_add_opcode_to_stack(func_body, ICONST, 0);
-    vm_add_int_to_stack(func_body, 10, 1);
-    vm_add_opcode_to_stack(func_body, IPRINTLN, 2);
-    vm_add_opcode_to_stack(func_body, HALT, 3);*/
-    struct stack_base func_test[3];
+    vm_free(vm);
+    struct stack_base func_test[7];
     vm_add_opcode_to_stack(func_test, 18, 0);
-    vm_add_func_to_stack(func_test, 3, 0, 1, x_void, x_native_t, "a", 1);
+    vm_add_func_to_stack(func_test, 3, 0, 1, x_void, x_native_t, 1);
     vm_add_opcode_to_stack(func_test, HALT, 2);
     vm_add_opcode_to_stack(func_test, ICONST, 3);
     vm_add_int_to_stack(func_test, 10, 4);
     vm_add_opcode_to_stack(func_test, IPRINTLN, 5);
     vm_add_opcode_to_stack(func_test, RET, 6);
-    //printf("%d\n", func_test[1].data.function->body[3].data.anint);
-    VM *vm = vm_create(func_test, sizeof(func_test), 0);
-    //printf("%d\n", vm->code[0].data.anint);
+    vm = vm_create(func_test, sizeof(func_test), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
     return 0;

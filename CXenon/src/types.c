@@ -78,15 +78,15 @@ int vm_add_opcode_to_stack(struct stack_base *stack, int value, int i){
     return 0;
 }
 
-int vm_add_func_to_stack(struct stack_base *stack, int addr, int nargs, int nlocals, int xret_t, int xfunc_t, char *name, int i){
+int vm_add_func_to_stack(struct stack_base *stack, int addr, int nargs, int nlocals, int xret_t, int xfunc_t, /*char *name,*/ int i){
     stack[i].type = x_function;
     stack[i].data.func.addr = addr;
     stack[i].data.func.nargs = nargs;
     stack[i].data.func.nlocals = nlocals;
     stack[i].data.func.xret_t = xret_t;
     stack[i].data.func.xfunc_t = xfunc_t;
-    stack[i].data.func.name = calloc(1, (strlen(name) + 1) * sizeof(char));
-    strncpy(stack[i].data.func.name, name, strlen(name) + 1);
+    //stack[i].data.func.name = calloc(1, (strlen(name) + 1) * sizeof(char));
+    //strncpy(stack[i].data.func.name, name, strlen(name) + 1);
     return 0;
 }
 

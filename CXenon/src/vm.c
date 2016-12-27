@@ -596,11 +596,11 @@ int vm_exec(VM *vm, int startip, bool trace){
                 vm->call_stack[callsp].locals[offset].data.achar = vm->stack[sp--].data.achar;
                 break;
             case CALL:
-                puts("got called");
                 if(vm->code[ip].data.func.xfunc_t == x_native_t){
                     addr = vm->code[ip].data.func.addr;
                     int nargs = vm->code[ip].data.func.nargs;
                     int nlocals = vm->code[ip].data.func.nlocals;
+                    ip++;
                     ++callsp;
                     vm_context_init(&vm->call_stack[callsp], ip, nargs+nlocals);
                     for(int i=0; i<nargs; i++){
@@ -610,7 +610,7 @@ int vm_exec(VM *vm, int startip, bool trace){
                     ip = addr;
                 }
                 else if(vm->code[ip].data.func.xfunc_t == x_foreign_t){
-                    
+
                 }
                 else{
                     puts("A fatal error occured");
