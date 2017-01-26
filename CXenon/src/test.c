@@ -13,6 +13,7 @@
 #include "types.h"
 
 int main(void){
+    VM *vm;
     struct stack_base loop[28];
     vm_add_opcode_to_stack(loop, ICONST, 0);
     vm_add_int_to_stack(loop, 10, 1);
@@ -42,7 +43,7 @@ int main(void){
     vm_add_int_to_stack(loop, 0, 25);
     vm_add_opcode_to_stack(loop, IPRINTLN, 26);
     vm_add_opcode_to_stack(loop, HALT, 27);
-    VM *vm = vm_create(loop, sizeof(loop), 2);
+    vm = vm_create(loop, sizeof(loop), 2);
     vm_exec(vm, 0, false);
     vm_free(vm);
     struct stack_base hellonums[3];

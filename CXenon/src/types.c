@@ -39,6 +39,7 @@ char* vm_parse_string(char* str){
     }
     //printf("%s", str);
     //printf("%s", tmp);
+    free(tmp);
     return str;
 }
 

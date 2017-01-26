@@ -83,6 +83,7 @@ char* preprocessor(char* path){
         }
     }
     fclose(fp);
-    contents[i] = '\0';
+    //contents[i] = '\0';
+    //puts(contents);
     return contents;
 }

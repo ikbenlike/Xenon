@@ -9,16 +9,19 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include "mpc/mpc.h"
 #include "parser.h"
 #include "preprocessor.h"
 
 int main(int argc, char **argv){
     if (argc < 2){
         puts("please provide a file to parse");
-        return 0;
+        return 1;
     }
     else {
-        parse(argv[1], preprocessor(argv[1]));
+        mpc_ast_t* ast = parse(argv[1], preprocessor(argv[1]));
+        mpc_ast_print(ast);
+        mpc_ast_delete(ast);
         return 0;
     }
 }

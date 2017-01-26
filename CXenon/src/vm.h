@@ -2,36 +2,11 @@
     CXenon VM v0.0.5
 */
 
-#ifndef VM_H_
-#define MAIN_H_
 
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define DEFAULT_STACK_SIZE      1000
 #define DEFAULT_CALL_STACK_SIZE 100
 #define DEFAULT_NUM_LOCALS      10
-
-
-
-typedef enum {
-    x_integer,
-    x_floating,
-    x_character,
-    x_string,
-    x_boolean,
-    x_opcode,
-    x_function,
-    x_void
-} x_type;
-
-typedef enum {
-    x_native_t,
-    x_foreign_t
-} x_func_t;
 
 
 
@@ -107,6 +82,24 @@ typedef enum {
 
 
 
+typedef enum {
+    x_integer,
+    x_floating,
+    x_character,
+    x_string,
+    x_boolean,
+    x_opcode,
+    x_function,
+    x_void
+} x_type;
+
+typedef enum {
+    x_native_t,
+    x_foreign_t
+} x_func_t;
+
+
+
 typedef struct{
     int addr;
     int nargs;
@@ -129,6 +122,14 @@ struct stack_base{
         xabstract_func_t func;
     } data;
 };
+
+
+
+typedef struct {
+    char *name;
+    int state;
+    struct stack_base data;
+} x_var_t;
 
 
 
@@ -159,12 +160,3 @@ int vm_exec(VM *vm, int startip, bool trace);
 int vm_print_instr(struct stack_base *code, int ip);
 int vm_print_stack(struct stack_base *stack, int count);
 int vm_print_data(struct stack_base *globals, int count);
-
-
-
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif

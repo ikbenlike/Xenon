@@ -654,7 +654,7 @@ int vm_exec(VM *vm, int startip, bool trace){
 }
 
 void vm_context_init(Context *ctx, int ip, int nlocals) {
-    if ( nlocals>DEFAULT_NUM_LOCALS ) {
+    if(nlocals>DEFAULT_NUM_LOCALS){
         fprintf(stderr, "too many locals requested: %d\n", nlocals);
     }
     ctx->returnip = ip;
@@ -662,7 +662,7 @@ void vm_context_init(Context *ctx, int ip, int nlocals) {
 
 int vm_print_data(struct stack_base *globals, int count){
     printf("Data memory:\n");
-    for (int i = 0; i < count; i++) {
+    for(int i = 0; i < count; i++){
         printf("%04d: %d\n", i, globals[i].data.anint);
     }
     return 0;
