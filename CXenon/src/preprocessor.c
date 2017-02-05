@@ -3,19 +3,56 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-char* preprocessor(char* path){
+char *input(char *dest, unsigned long long size){
+    int i = 0;
+    while(1){
+        dest[i] = getchar();
+        if(i >= size){
+            size += 20;
+            dest = realloc(dest, size);
+        }
+        if(dest[i] == '\n'){
+            dest[i] = '\0';
+            break;
+        }
+        i++;
+    }
+    return dest;
+}
+
+char *finput(char *dest, char *path, unsigned long long size){
+    int i = 0;
+    char c;
     FILE *fp = fopen(path, "r");
     if(fp == NULL){
         perror("fopen");
         exit(1);
     }
+    while((c= fgetc(fp)) != EOF){
+        dest[i] = c;
+        if(i >= size){
+            size += 20;
+            dest = realloc(dest, size);
+        }
+        if(dest[i] == EOF){
+            dest[i] = '\0';
+            break;
+        }
+        i++;
+    }
+    fclose(fp);
+    dest[i] = '\0';
+    return dest;
+}
+
+char* preprocessor(char *buffer){
     bool in_string = false;
-    int size = 1000;
+    int size = strlen(buffer) + 1;
     char* contents = calloc(1, size * sizeof(char));
     char* tmpptr;
     int i = 0;
     char c;
-    while((c = fgetc(fp)) != EOF){
+    while((c = buffer[i]) != '\0'){
         if(size - i < 10){
             size += 10;
             tmpptr = realloc(contents, size);
@@ -46,8 +83,8 @@ char* preprocessor(char* path){
             if(contents[i-2] == '/' && contents[i-1] == '/' && in_string == false){
                 i -= 2;
                 while(1){
-                    c = fgetc(fp);
-                    if(c == '\n' || c == EOF){
+                    c = buffer[i];
+                    if(c == '\n' || c == '\0'){
                         break;
                     }
                 }
@@ -66,8 +103,8 @@ char* preprocessor(char* path){
                             contents = tmpptr;
                         }
                     }
-                    c = fgetc(fp);
-                    if(c == EOF){
+                    c = buffer[i++];
+                    if(c == '\0'){
                         puts("Unexpected EOF: comment was not closed.");
                         exit(1);
                     }
@@ -82,7 +119,6 @@ char* preprocessor(char* path){
             continue;
         }
     }
-    fclose(fp);
     //contents[i] = '\0';
     //puts(contents);
     return contents;

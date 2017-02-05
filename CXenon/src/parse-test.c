@@ -2,7 +2,7 @@
     CXenon VM v0.0.5
 */
 
-// compile with: gcc mpc/mpc.c parser.c parse-test.c
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +19,12 @@ int main(int argc, char **argv){
         return 1;
     }
     else {
-        mpc_ast_t* ast = parse(argv[1], preprocessor(argv[1]));
+        char *a = calloc(1, 1000*sizeof(char));
+        printf("%s\n", finput(a, argv[1], 1000*sizeof(char)));
+        char *b = preprocessor(a);
+        free(a);
+        mpc_ast_t* ast = parse(argv[1], b);
+        free(b);
         mpc_ast_print(ast);
         mpc_ast_delete(ast);
         return 0;
