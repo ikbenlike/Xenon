@@ -74,7 +74,7 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         " decls     : <typeident> '=' ( <number> | <character> | <string> | <boolean> | <term> ) <index>* ';' ;  \n"
         " args      : <typeident>? (',' <typeident>)* ;                                                             \n"
         " body      : '{' (<decls> | <stmt>)* '}' ;                                                                     \n"
-        " use       : (\"use\" /[a-zA-Z_\\/\\.][a-zA-Z0-9_\\/\\.]*/)* ;                                             \n"
+        " use       : (\"use\" /[a-zA-Z_\\/\\.][a-zA-Z0-9_\\/\\.]*/)* ';' ;                                             \n"
         " xenon     : /^/ <use> <decls>* <procedure>* /$/ ;                                                          \n",
         Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,
         Typeident, Decls, Args, Body, Procedure, Use, Xenon, NULL);
@@ -111,7 +111,7 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         mpc_err_print(r.error);
         mpc_err_delete(r.error);
         //puts("erroring out of parser #2");
-        exit(1);
+        return NULL;
     }
 
     mpc_cleanup(19, Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,

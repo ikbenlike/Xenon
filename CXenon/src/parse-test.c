@@ -12,11 +12,11 @@
 #include "mpc/mpc.h"
 #include "parser.h"
 #include "preprocessor.h"
+#include "repl.h"
 
 int main(int argc, char **argv){
     if (argc < 2){
-        puts("please provide a file to parse");
-        return 1;
+        repl();
     }
     else {
         char *a = calloc(1, 1000*sizeof(char));
