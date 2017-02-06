@@ -47,7 +47,7 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         "           | <ident> ;                                                                                     \n"
         "                                                                                                           \n"
         " term      : <factor> (('*' | '/' | '%') <factor>)* ;                                                      \n"
-        " lexp      : <term> <index>* (('+' | '-') <term> <index>* )* ;                                             \n"
+        " lexp      : <term> <index>* (('+' | '-') <term> <index>* )* ';'*;                                             \n"
         "                                                                                                           \n"
         " index     : '[' <number> ']' ;                                                                            \n"
         " stmt      : '{' <stmt>* '}'                                                                               \n"
@@ -69,13 +69,13 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         "           | <lexp> \"==\" <lexp>                                                                          \n"
         "           | <lexp> \"in\" <lexp> ;                                                                        \n"
         "                                                                                                           \n"
-        " typeident : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) <ident> ;                              \n"
-        " procedure : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" ) ':' <ident> '(' <args> ')' <body> ;    \n"
+        " typeident : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" | \"void\") <ident> ;                              \n"
+        " procedure : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" | \"void\") ':' <ident> '(' <args> ')' <body> ;    \n"
         " decls     : <typeident> '=' ( <number> | <character> | <string> | <boolean> | <term> ) <index>* ';' ;  \n"
         " args      : <typeident>? (',' <typeident>)* ;                                                             \n"
         " body      : '{' (<decls> | <stmt>)* '}' ;                                                                     \n"
         " use       : (\"use\" /[a-zA-Z_\\/\\.][a-zA-Z0-9_\\/\\.]*/)* ';' ;                                             \n"
-        " xenon     : /^/ <use> <decls>* <procedure>* /$/ ;                                                          \n",
+        " xenon     : /^/ (<use> | <decls> | <procedure> | <stmt> | <lexp>)+ /$/ ;                                                          \n",
         Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,
         Typeident, Decls, Args, Body, Procedure, Use, Xenon, NULL);
 

@@ -73,6 +73,11 @@ int vm_add_bool_to_stack(struct stack_base *stack, bool value, int i){
     return 0;
 }
 
+int vm_add_void_to_stack(struct stack_base *stack, int i){
+    stack[i].type = x_void;
+    return 0;
+}
+
 int vm_add_opcode_to_stack(struct stack_base *stack, int value, int i){
     stack[i].type = x_opcode;
     stack[i].data.anint = value;
