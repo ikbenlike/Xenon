@@ -1,10 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <unistd.h>
-#include "parser.h"
-#include "preprocessor.h"
-#include "repl.h"
+#ifndef __VM_H_
+    #include "vm.h"
+#endif
+#ifndef __PARSER_H_
+    #include "parser.h"
+#endif
+#ifndef __PREPROCESSOR_H_
+    #include "preprocessor.h"
+#endif
+#ifndef __REPL_H_
+    #include "repl.h"
+#endif
 
 int repl(){
     char *a = calloc(1, 1000 * sizeof(char));
@@ -16,6 +26,9 @@ int repl(){
         free(b);
         if(ast != NULL){
             mpc_ast_print(ast);
+            struct stack_base *stack = calloc(1, 1000*sizeof(struct stack_base));
+            VM *vm = vm_create(stack, 1000, 0);
+            vm_free(vm);
             mpc_ast_delete(ast);
         }
     }

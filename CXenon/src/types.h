@@ -1,12 +1,12 @@
 /*
 *   CXenon VM v0.0.5
 */
-
-
-
+#ifndef __TYPES_H_
+    #define __TYPES_H_
+#endif
 
 char* vm_parse_string(char* str);
-int vm_add_int_to_stack(struct stack_base* stack, int value, int i);
+int vm_add_int_to_stack(struct stack_base* stack, long int value, int i);
 int vm_add_string_to_stack(struct stack_base* stack, char* value, int i);
 int vm_add_char_to_stack(struct stack_base* stack, char value, int i);
 int vm_add_float_to_stack(struct stack_base* stack, char value, int i);

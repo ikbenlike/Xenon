@@ -7,12 +7,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include "vm.h"
-#include "types.h"
+#ifndef __VM_H_
+    #include "vm.h"
+#endif
+#ifndef __TYPES_H_
+    #include "types.h"
+#endif
 
 
 
-typedef struct {
+/*typedef struct {
     char name[8];
     int nargs;
 } VM_INSTRUCTION;
@@ -88,7 +92,7 @@ static VM_INSTRUCTION vm_instructions[] = {
     { "cload",    1 },    // 66
     { "cstore",   1 },    // 67
     { "halt",     0 }     // 68
-};
+};*/
 
 
 
@@ -125,13 +129,13 @@ int vm_print_instr(struct stack_base *code, int ip){
             printf("%04d:  %-20s", ip, inst->name);
             break;
         case 1:
-            printf("%04d:  %-10s%-10d", ip, inst->name, code[ip + 1].data.anint);
+            printf("%04d:  %-10s%-10li", ip, inst->name, code[ip + 1].data.anint);
             break;
         case 2:
-            printf("%04d:  %-10s%d,%10d", ip, inst->name, code[ip + 1].data.anint, code[ip + 2].data.anint);
+            printf("%04d:  %-10s%li,%10li", ip, inst->name, code[ip + 1].data.anint, code[ip + 2].data.anint);
             break;
         case 3:
-            printf("%04d:  %-10s%d,%d,%-6d", ip, inst->name, code[ip + 1].data.anint, code[ip + 2].data.anint, code[ip + 3].data.anint);
+            printf("%04d:  %-10s%li,%li,%-6li", ip, inst->name, code[ip + 1].data.anint, code[ip + 2].data.anint, code[ip + 3].data.anint);
             break;
     }
     return 0;
@@ -140,7 +144,7 @@ int vm_print_instr(struct stack_base *code, int ip){
 int vm_print_stack(struct stack_base *stack, int count){
     printf("stack=[");
     for (int i = 0; i <= count; i++) {
-        printf(" %d", stack[i].data.anint);
+        printf(" %li", stack[i].data.anint);
     }
     printf(" ]\n");
     return 0;
@@ -610,7 +614,7 @@ int vm_exec(VM *vm, int startip, bool trace){
                     ip = addr;
                 }
                 else if(vm->code[ip].data.func.xfunc_t == x_foreign_t){
-
+                    puts("Feature not implemented yet, vm.c#617");
                 }
                 else{
                     puts("A fatal error occured");
@@ -663,7 +667,7 @@ void vm_context_init(Context *ctx, int ip, int nlocals) {
 int vm_print_data(struct stack_base *globals, int count){
     printf("Data memory:\n");
     for(int i = 0; i < count; i++){
-        printf("%04d: %d\n", i, globals[i].data.anint);
+        printf("%04d: %li\n", i, globals[i].data.anint);
     }
     return 0;
 }

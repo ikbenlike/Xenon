@@ -1,6 +1,9 @@
 /*
     CXenon VM v0.0.5
 */
+#ifndef __PARSER_H_
+    #define __PARSER_H_
+#endif
 
 #include "mpc/mpc.h"
 

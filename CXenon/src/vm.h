@@ -4,6 +4,12 @@
 
 
 
+#ifndef __VM_H_
+    #define __VM_H_
+#endif
+
+
+
 #define DEFAULT_STACK_SIZE      1000
 #define DEFAULT_CALL_STACK_SIZE 100
 #define DEFAULT_NUM_LOCALS      10
@@ -82,6 +88,86 @@ typedef enum {
 
 
 
+typedef struct {
+    char name[8];
+    int nargs;
+} VM_INSTRUCTION;
+
+
+
+static VM_INSTRUCTION vm_instructions[] = {
+    { "noop",     0 },    // 0
+    { "isub",     0 },    // 1
+    { "imul",     0 },    // 2
+    { "idiv",     0 },    // 3
+    { "ilt",      0 },    // 4
+    { "ieq",      0 },    // 6
+    { "br",       1 },    // 7
+    { "brt",      1 },    // 8
+    { "brf",      1 },    // 9
+    { "iconst",   1 },    // 10
+    { "iload",    1 },    // 11
+    { "igload",   1 },    // 12
+    { "istore",   1 },    // 13
+    { "igstore",  1 },    // 14
+    { "iprint",   0 },    // 15
+    { "iprintln", 0 },    // 16
+    { "pop",      0 },    // 17
+    { "call",     3 },    // 18
+    { "ret",      0 },    // 19
+    { "fadd",     0 },    // 20
+    { "fsub",     0 },    // 21
+    { "fmul",     0 },    // 22
+    { "fdiv",     0 },    // 23
+    { "fconst",   1 },    // 24
+    { "flt",      0 },    // 25
+    { "feq",      0 },    // 26
+    { "fmt",      0 },    // 27
+    { "fneq",     0 },    // 28
+    { "imt",      0 },    // 29
+    { "ineq",     0 },    // 30
+    { "bconst",   1 },    // 31
+    { "beq",      0 },    // 32
+    { "bneq",     1 },    // 33
+    { "btrue",    0 },    // 34
+    { "bfalse",   0 },    // 35
+    { "fprint",   0 },    // 36
+    { "fprintln", 0 },    // 37
+    { "bprint",   0 },    // 38
+    { "bprintln", 0 },    // 39
+    { "sconst",   1 },    // 40
+    { "sprint",   0 },    // 41
+    { "sprintln", 0 },    // 42
+    { "seq",      0 },    // 43
+    { "sneq",     0 },    // 44
+    { "slt",      0 },    // 45
+    { "smt",      0 },    // 46
+    { "sgload",   1 },    // 47
+    { "sgstore",  1 },    // 48
+    { "sload",    1 },    // 49
+    { "sstore",   1 },    // 50
+    { "bgload",   1 },    // 51
+    { "bgstore",  1 },    // 52
+    { "bload",    1 },    // 53
+    { "bstore",   1 },    // 54
+    { "fgload",   1 },    // 55
+    { "fgstore",  1 },    // 56
+    { "fload",    1 },    // 57
+    { "fstore",   1 },    // 58
+    { "cconst",   1 },    // 59
+    { "cprint",   0 },    // 60
+    { "cprintln", 0 },    // 61
+    { "ceq",      0 },    // 62
+    { "cneq",     0 },    // 63
+    { "cgload",   1 },    // 64
+    { "cgstore",  1 },    // 65
+    { "cload",    1 },    // 66
+    { "cstore",   1 },    // 67
+    { "halt",     0 }     // 68
+};
+
+
+
 typedef enum {
     x_integer,
     x_floating,
@@ -116,7 +202,7 @@ struct stack_base{
     struct {
         char* astring;
         char achar;
-        int anint;
+        long int anint;
         float afloat;
         bool abool;
         xabstract_func_t func;

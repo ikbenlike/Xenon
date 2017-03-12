@@ -2,6 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#ifndef __PREPROCESSOR_H_
+    #include "preprocessor.h"
+#endif
+
 
 char *input(char *dest, unsigned long long size){
     int i = 0;

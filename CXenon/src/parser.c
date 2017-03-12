@@ -8,7 +8,9 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include "mpc/mpc.h"
-#include "parser.h"
+#ifndef __PARSER_H_
+    #include "parser.h"
+#endif
 
 mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
     //puts("entering parser");
@@ -21,6 +23,7 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
     mpc_parser_t* Factor    = mpc_new("factor");
     mpc_parser_t* Term      = mpc_new("term");
     mpc_parser_t* Lexp      = mpc_new("lexp");
+    mpc_parser_t* Maths     = mpc_new("maths");
     mpc_parser_t* Index     = mpc_new("index");
     mpc_parser_t* Stmt      = mpc_new("stmt");
     mpc_parser_t* Exp       = mpc_new("exp");
@@ -47,7 +50,8 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         "           | <ident> ;                                                                                     \n"
         "                                                                                                           \n"
         " term      : <factor> (('*' | '/' | '%') <factor>)* ;                                                      \n"
-        " lexp      : <term> <index>* (('+' | '-') <term> <index>* )* ';'*;                                             \n"
+        " lexp      : <term> <index>* (('+' | '-') <term> <index>* )* ;                                             \n"
+        " maths     : <lexp> ';' ;                                                                                  \n"
         "                                                                                                           \n"
         " index     : '[' <number> ']' ;                                                                            \n"
         " stmt      : '{' <stmt>* '}'                                                                               \n"
@@ -62,21 +66,21 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         "           | <ident> '(' <ident>? (',' <ident>)* ')' <index>* ';';                                         \n"
         "                                                                                                           \n"
         " exp       : <lexp> '>' <lexp>                                                                             \n"
-        "           | <lexp> '<' <lexp>                                                                             \n"
-        "           | <lexp> \">=\" <lexp>                                                                          \n"
-        "           | <lexp> \"<=\" <lexp>                                                                          \n"
-        "           | <lexp> \"!=\" <lexp>                                                                          \n"
-        "           | <lexp> \"==\" <lexp>                                                                          \n"
-        "           | <lexp> \"in\" <lexp> ;                                                                        \n"
-        "                                                                                                           \n"
+        "           | <lexp> '<' <lexp>                                                                                       \n"
+        "           | <lexp> \">=\" <lexp>                                                                                    \n"
+        "           | <lexp> \"<=\" <lexp>                                                                                    \n"
+        "           | <lexp> \"!=\" <lexp>                                                                                    \n"
+        "           | <lexp> \"==\" <lexp>                                                                                    \n"
+        "           | <lexp> \"in\" <lexp> ;                                                                                  \n"
+        "                                                                                                                     \n"
         " typeident : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" | \"void\") <ident> ;                              \n"
         " procedure : (\"int\" | \"char\" | \"str\" | \"bool\" | \"float\" | \"void\") ':' <ident> '(' <args> ')' <body> ;    \n"
-        " decls     : <typeident> '=' ( <number> | <character> | <string> | <boolean> | <term> ) <index>* ';' ;  \n"
+        " decls     : <typeident> '=' ( <number> | <character> | <string> | <boolean> | <lexp> ) <index>* ';' ;  \n"
         " args      : <typeident>? (',' <typeident>)* ;                                                             \n"
         " body      : '{' (<decls> | <stmt>)* '}' ;                                                                     \n"
         " use       : (\"use\" /[a-zA-Z_\\/\\.][a-zA-Z0-9_\\/\\.]*/)* ';' ;                                             \n"
-        " xenon     : /^/ (<use> | <decls> | <procedure> | <stmt> | <lexp>)+ /$/ ;                                                          \n",
-        Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,
+        " xenon     : /^/ (<use> | <decls> | <procedure> | <stmt> | <maths>)+ /$/ ;                                                          \n",
+        Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Maths, Index, Stmt, Exp,
         Typeident, Decls, Args, Body, Procedure, Use, Xenon, NULL);
 
     /*
@@ -114,7 +118,7 @@ mpc_ast_t* parse(char* file_to_parse, char* string_to_parse){
         return NULL;
     }
 
-    mpc_cleanup(19, Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Index, Stmt, Exp,
+    mpc_cleanup(20, Ident, Number, Character, String, Boolean, Print, Factor, Term, Lexp, Maths, Index, Stmt, Exp,
                   Typeident, Decls, Args, Body, Procedure, Use, Xenon);
 
     //puts("exiting parser");

@@ -7,7 +7,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include "vm.h"
+#ifndef __VM_H_
+    #include "vm.h"
+#endif
 
 char* vm_parse_string(char* str){
     //printf("%d", 1);
@@ -43,7 +45,7 @@ char* vm_parse_string(char* str){
     return str;
 }
 
-int vm_add_int_to_stack(struct stack_base *stack, int value, int i){
+int vm_add_int_to_stack(struct stack_base *stack, long int value, int i){
     stack[i].type = x_integer;
     stack[i].data.anint = value;
     return 0;
