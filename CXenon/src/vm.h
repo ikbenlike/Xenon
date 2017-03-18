@@ -83,7 +83,12 @@ typedef enum {
     CLOAD =      66,         // char load
     CSTORE =     67,         // char store
     INPUT =      68,         // get input
-    HALT =       69          // exit program
+    GLOAD =      69,
+    GSTORE =     70,
+    LOAD =       71,
+    STORE =      72,
+    CONST =      73,
+    HALT =       74          // exit program
 } VM_CODE;
 
 
@@ -163,6 +168,11 @@ static VM_INSTRUCTION vm_instructions[] = {
     { "cgstore",  1 },    // 65
     { "cload",    1 },    // 66
     { "cstore",   1 },    // 67
+    { "gload",    1 },
+    { "gstore",   1 },
+    { "load",     1 },
+    { "store",    1 },
+    { "const",    1 },
     { "halt",     0 }     // 68
 };
 

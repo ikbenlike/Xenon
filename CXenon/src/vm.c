@@ -186,6 +186,9 @@ int vm_exec(VM *vm, int startip, bool trace){
 
         ip++;
         switch(opcode){
+            case CONST:
+                vm->stack[++sp] = vm->code[ip++];
+                break;
             case ICONST:
                 vm->stack[++sp].data.anint = vm->code[ip++].data.anint;
                 break;
@@ -504,12 +507,14 @@ int vm_exec(VM *vm, int startip, bool trace){
             case INPUT:
                 sp++;
                 a = 0;
-                si = malloc(sizeof(char) * 1000);
+                b = 100;
+                si = malloc(sizeof(char) * b);
                 fflush(stdin);
                 while(1){
                     si[a] = getchar();
-                    if(a >= sizeof(si)){
-                        si = realloc(si, sizeof(si) + 10);
+                    if(a >= b){
+                        b += 25;
+                        si = realloc(si, sizeof(char) * b);
                     }
                     if(si[a] == '\n'){
                         si[a] = '\0';
@@ -598,6 +603,22 @@ int vm_exec(VM *vm, int startip, bool trace){
             case CSTORE:
                 offset = vm->code[ip++].data.anint;
                 vm->call_stack[callsp].locals[offset].data.achar = vm->stack[sp--].data.achar;
+                break;
+            case GLOAD:
+                addr = vm->code[ip++].data.anint;
+                vm->stack[++sp] = vm->globals[addr];
+                break;
+            case GSTORE:
+                addr = vm->code[ip++].data.anint;
+                vm->globals[addr] = vm->stack[sp--];
+                break;
+            case LOAD:
+                offset = vm->code[ip++].data.anint;
+                vm->stack[++sp] = vm->call_stack[callsp].locals[offset];
+                break;
+            case STORE:
+                offset = vm->code[ip++].data.anint;
+                vm->call_stack[callsp].locals[offset] = vm->stack[sp--];
                 break;
             case CALL:
                 if(vm->code[ip].data.func.xfunc_t == x_native_t){

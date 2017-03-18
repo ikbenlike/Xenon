@@ -9,26 +9,6 @@
 #endif
 
 
-/*typedef struct {
-    int key;
-    struct stack_base value;
-} hashmap_element;
-
-
-
-typedef struct {
-    int len;
-    hashmap_element *list;
-} hashmap_element_vector;
-
-
-
-typedef struct {
-    int size;
-    hashmap_element_vector *table;
-} hashmap;*/
-
-
 
 hashmap_element_vector *hashmap_resize_vector(hashmap_element_vector *hev){
     hev->len *= 2;
