@@ -26,7 +26,7 @@ int repl(){
         free(b);
         if(ast != NULL){
             mpc_ast_print(ast);
-            struct stack_base *stack = calloc(1, 1000*sizeof(struct stack_base));
+            xenon_stack_item *stack = calloc(1, 1000*sizeof(xenon_stack_item));
             VM *vm = vm_create(stack, 1000, 0);
             vm_free(vm);
             mpc_ast_delete(ast);

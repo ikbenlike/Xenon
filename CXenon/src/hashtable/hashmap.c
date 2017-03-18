@@ -91,7 +91,7 @@ int *hashmap_item_exists(hashmap *hm, char *inp){
 
 
 
-int hashmap_set(hashmap *hm, char* name, struct stack_base val){
+int hashmap_set(hashmap *hm, char* name, xenon_stack_item val){
     int *e = hashmap_item_exists(hm, name);
     long hn = hashmap_hasher(hm, name);
     long key = hashmap_hasher_nc(name);
@@ -115,7 +115,7 @@ int hashmap_set(hashmap *hm, char* name, struct stack_base val){
 
 
 
-struct stack_base *hashmap_get(hashmap *hm, char *name){
+xenon_stack_item *hashmap_get(hashmap *hm, char *name){
     long n = hashmap_hasher(hm, name);
     int *e = hashmap_item_exists(hm, name);
     if(e[0] == 1){

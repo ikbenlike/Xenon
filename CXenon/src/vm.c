@@ -100,11 +100,11 @@ static VM_INSTRUCTION vm_instructions[] = {
 
 
 
-int vm_init(VM *vm, struct stack_base *code, int code_size, int nglobals){
-    vm->code = calloc(1, sizeof(struct stack_base) * code_size);
+int vm_init(VM *vm, xenon_stack_item *code, int code_size, int nglobals){
+    vm->code = calloc(1, sizeof(xenon_stack_item) * code_size);
     memcpy(vm->code, code, code_size);
     vm->code_size = code_size;
-    vm->globals = calloc(nglobals, sizeof(struct stack_base));
+    vm->globals = calloc(nglobals, sizeof(xenon_stack_item));
     vm->nglobals = nglobals;
     return 0;
 }
@@ -115,13 +115,13 @@ int vm_free(VM *vm){
     return 0;
 }
 
-VM *vm_create(struct stack_base *code, int code_size, int nglobals){
+VM *vm_create(xenon_stack_item *code, int code_size, int nglobals){
     VM *vm = calloc(1, sizeof(VM));
     vm_init(vm, code, code_size, nglobals);
     return vm;
 }
 
-int vm_print_instr(struct stack_base *code, int ip){
+int vm_print_instr(xenon_stack_item *code, int ip){
     int opcode = code[ip].data.anint;
     VM_INSTRUCTION *inst = &vm_instructions[opcode];
     switch (inst->nargs) {
@@ -141,7 +141,7 @@ int vm_print_instr(struct stack_base *code, int ip){
     return 0;
 }
 
-int vm_print_stack(struct stack_base *stack, int count){
+int vm_print_stack(xenon_stack_item *stack, int count){
     printf("stack=[");
     for (int i = 0; i <= count; i++) {
         printf(" %li", stack[i].data.anint);
@@ -685,7 +685,7 @@ void vm_context_init(Context *ctx, int ip, int nlocals) {
     ctx->returnip = ip;
 }
 
-int vm_print_data(struct stack_base *globals, int count){
+int vm_print_data(xenon_stack_item *globals, int count){
     printf("Data memory:\n");
     for(int i = 0; i < count; i++){
         printf("%04d: %li\n", i, globals[i].data.anint);

@@ -14,7 +14,7 @@
 
 int main(void){
     VM *vm;
-    struct stack_base loop[28];
+    xenon_stack_item loop[28];
     vm_add_opcode_to_stack(loop, CONST, 0);
     vm_add_int_to_stack(loop, 10, 1);
     vm_add_opcode_to_stack(loop, GSTORE, 2);
@@ -46,7 +46,7 @@ int main(void){
     vm = vm_create(loop, sizeof(loop), 2);
     vm_exec(vm, 0, false);
     vm_free(vm);
-    struct stack_base hellonums[4];
+    xenon_stack_item hellonums[4];
     vm_add_opcode_to_stack(hellonums, CONST, 0);
     vm_add_int_to_stack(hellonums, 1234, 1);
     vm_add_opcode_to_stack(hellonums, IPRINTLN, 2);
@@ -54,7 +54,7 @@ int main(void){
     vm = vm_create(hellonums, sizeof(hellonums), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
-    struct stack_base f[17];
+    xenon_stack_item f[17];
     vm_add_opcode_to_stack(f, CONST, 0);
     vm_add_int_to_stack(f, 10, 1);
     vm_add_opcode_to_stack(f, CALL, 2);
@@ -77,7 +77,7 @@ int main(void){
     vm = vm_create(f, sizeof(f), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
-    struct stack_base hello[4];
+    xenon_stack_item hello[4];
     vm_add_opcode_to_stack(hello, CONST, 0);
     vm_add_string_to_stack(hello, "Hello World!", 1);
     vm_add_opcode_to_stack(hello, SPRINTLN, 2);
@@ -87,7 +87,7 @@ int main(void){
     vm_free(vm);
     char *tmpstr = calloc(1, 10 * sizeof(char));
     strcpy(tmpstr, "\"okay\n\n\"");
-    struct stack_base hellochar[14];
+    xenon_stack_item hellochar[14];
     vm_add_opcode_to_stack(hellochar, CONST, 0);
     vm_add_string_to_stack(hellochar, "and now with chars: ", 1);
     vm_add_opcode_to_stack(hellochar, SPRINT, 2);
@@ -105,7 +105,7 @@ int main(void){
     vm_exec(vm, 0, false);
     vm_free(vm);
     free(tmpstr);
-    struct stack_base get_input[6];
+    xenon_stack_item get_input[6];
     vm_add_opcode_to_stack(get_input, CONST, 0);
     vm_add_string_to_stack(get_input, "enter some input: ", 1);
     vm_add_opcode_to_stack(get_input, SPRINT, 2);
@@ -115,7 +115,7 @@ int main(void){
     vm = vm_create(get_input, sizeof(get_input), 0);
     vm_exec(vm, 0, false);
     vm_free(vm);
-    struct stack_base func_test[7];
+    xenon_stack_item func_test[7];
     vm_add_opcode_to_stack(func_test, 18, 0);
     vm_add_func_to_stack(func_test, 3, 0, 1, x_void, x_native_t, 1);
     vm_add_opcode_to_stack(func_test, HALT, 2);

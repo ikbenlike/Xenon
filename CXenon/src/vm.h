@@ -207,7 +207,7 @@ typedef struct{
 
 
 
-struct stack_base{
+typedef struct{
     int type;
     struct {
         char* astring;
@@ -217,42 +217,42 @@ struct stack_base{
         bool abool;
         xabstract_func_t func;
     } data;
-};
+} xenon_stack_item;
 
 
 
 typedef struct {
     char *name;
     int state;
-    struct stack_base data;
+    xenon_stack_item data;
 } x_var_t;
 
 
 
 typedef struct {
     int returnip;
-    struct stack_base locals[DEFAULT_NUM_LOCALS];
+    xenon_stack_item locals[DEFAULT_NUM_LOCALS];
 } Context;
 
 
 
 typedef struct {
-    struct stack_base *code;
+    xenon_stack_item *code;
     int code_size;
 
-    struct stack_base *globals;
+    xenon_stack_item *globals;
     int nglobals;
 
-    struct stack_base stack[DEFAULT_STACK_SIZE];
+    xenon_stack_item stack[DEFAULT_STACK_SIZE];
     Context call_stack[DEFAULT_CALL_STACK_SIZE];
 } VM;
 
 
 void vm_context_init(Context *ctx, int ip, int nlocals);
-VM *vm_create(struct stack_base *code, int code_size, int nglobals);
+VM *vm_create(xenon_stack_item *code, int code_size, int nglobals);
 int vm_free(VM *vm);
-int vm_init(VM *vm, struct stack_base *code, int code_size, int nglobals);
+int vm_init(VM *vm, xenon_stack_item *code, int code_size, int nglobals);
 int vm_exec(VM *vm, int startip, bool trace);
-int vm_print_instr(struct stack_base *code, int ip);
-int vm_print_stack(struct stack_base *stack, int count);
-int vm_print_data(struct stack_base *globals, int count);
+int vm_print_instr(xenon_stack_item *code, int ip);
+int vm_print_stack(xenon_stack_item *stack, int count);
+int vm_print_data(xenon_stack_item *globals, int count);

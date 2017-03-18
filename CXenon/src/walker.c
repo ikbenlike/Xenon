@@ -39,7 +39,7 @@ int number_of_nodes(mpc_ast_t* tree){
     return 0;
 }
 
-int lexp_handler(mpc_ast_t node, struct stack_base* stack, int *stack_pointer){
+int lexp_handler(mpc_ast_t node, xenon_stack_item* stack, int *stack_pointer){
     //int nodes_in_tree = number_of_nodes(*node.children);
     //printf("%d\n", *stack_pointer);
     if(node.children_num == 0){
@@ -63,7 +63,7 @@ int lexp_handler(mpc_ast_t node, struct stack_base* stack, int *stack_pointer){
     return 0;
 }
 
-int math_handler(mpc_ast_t node, struct stack_base *stack, int *stack_pointer){
+int math_handler(mpc_ast_t node, xenon_stack_item *stack, int *stack_pointer){
     /*puts("math_handler");
     //mpc_ast_print(node.children[0]);
     //int nodes_in_tree = number_of_nodes(*node.children);
@@ -74,7 +74,7 @@ int math_handler(mpc_ast_t node, struct stack_base *stack, int *stack_pointer){
     return 0;
 }
 
-int function_handler(mpc_ast_t node, struct stack_base* stack, int *stack_pointer){
+int function_handler(mpc_ast_t node, xenon_stack_item* stack, int *stack_pointer){
     int nodes_in_tree = number_of_nodes(*node.children);
     int narg = 0;
     int ret = x_void;
@@ -106,11 +106,11 @@ int function_handler(mpc_ast_t node, struct stack_base* stack, int *stack_pointe
     return 0;
 }
 
-int tree_walker(mpc_ast_t* tree, struct stack_base* stack){
+int tree_walker(mpc_ast_t* tree, xenon_stack_item* stack){
     //puts("tree_walker");
     int stack_pointer = 0;
     //printf("%d\n", stack_pointer);
-    //struct stack_base* stack = calloc(1, DEFAULT_STACK_SIZE * sizeof(struct stack_base));
+    //xenon_stack_item* stack = calloc(1, DEFAULT_STACK_SIZE * sizeof(xenon_stack_item));
     int nodes_in_tree = number_of_nodes(tree);
     if(tree[0].children_num == 0){
         vm_add_opcode_to_stack(stack, HALT, stack_pointer++);
@@ -139,7 +139,7 @@ int main(int argc, char **argv){
     }
     else {
         //puts("main");
-        struct stack_base *stack = calloc(1, 1000*sizeof(struct stack_base));
+        xenon_stack_item *stack = calloc(1, 1000*sizeof(xenon_stack_item));
         char *a = calloc(1, 1000*sizeof(char));
         finput(a, argv[1], 1000*sizeof(char));
         printf("%s\n", a);
