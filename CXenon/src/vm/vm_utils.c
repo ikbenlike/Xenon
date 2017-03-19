@@ -45,9 +45,25 @@ char* vm_parse_string(char* str){
     return str;
 }
 
-int vm_add_int_to_stack(xenon_stack_item *stack, long int value, int i){
-    stack[i].type = x_integer;
-    stack[i].data.anint = value;
+int vm_check_stack_size(xenon_stack_vector *stack){
+    if(stack->size - stack->cursor <= 10){
+        stack->size += 100;
+        xenon_stack_item *tmp = realloc(stack->vector, stack->size);
+        if(tmp == NULL){
+            puts("A fatal error occured while resizing the stack. Check how much free RAM you have.");
+            exit(1);
+        }
+        else{
+            stack->vector = tmp;
+        }
+    }
+    return 0;
+}
+
+int vm_add_int_to_stack(xenon_stack_vector *stack, long int value){
+    vm_check_stack_size(stack);
+    stack->vector[stack->cursor].type = x_integer;
+    stack->vector[stack->cursor++].data.anint = value;
     return 0;
 }
 
@@ -58,9 +74,10 @@ xenon_stack_item vm_generate_int(long int value){
     return item;
 }
 
-int vm_add_string_to_stack(xenon_stack_item *stack, char* value, int i){
-    stack[i].type = x_string;
-    stack[i].data.astring = value;
+int vm_add_string_to_stack(xenon_stack_vector *stack, char* value){
+    vm_check_stack_size(stack);
+    stack->vector[stack->cursor].type = x_string;
+    stack->vector[stack->cursor++].data.astring = value;
     return 0;
 }
 
@@ -72,9 +89,10 @@ xenon_stack_item vm_generate_string(char *value){
     return item;
 }
 
-int vm_add_char_to_stack(xenon_stack_item *stack, char value, int i){
-    stack[i].type = x_character;
-    stack[i].data.achar = value;
+int vm_add_char_to_stack(xenon_stack_vector *stack, char value){
+    vm_check_stack_size(stack);
+    stack->vector[stack->cursor].type = x_character;
+    stack->vector[stack->cursor++].data.achar = value;
     return 0;
 }
 
@@ -85,9 +103,10 @@ xenon_stack_item vm_generate_char(char value){
     return item;
 }
 
-int vm_add_float_to_stack(xenon_stack_item *stack, float value, int i){
-    stack[i].type = x_floating;
-    stack[i].data.afloat = value;
+int vm_add_float_to_stack(xenon_stack_vector *stack, float value){
+    vm_check_stack_size(stack);
+    stack->vector[stack->cursor].type = x_floating;
+    stack->vector[stack->cursor++].data.afloat = value;
     return 0;
 }
 
@@ -98,9 +117,10 @@ xenon_stack_item vm_generate_float(float value){
     return item;
 }
 
-int vm_add_bool_to_stack(xenon_stack_item *stack, bool value, int i){
-    stack[i].type = x_boolean;
-    stack[i].data.abool = value;
+int vm_add_bool_to_stack(xenon_stack_vector *stack, bool value){
+    vm_check_stack_size(stack);
+    stack->vector[stack->cursor].type = x_boolean;
+    stack->vector[stack->cursor++].data.abool = value;
     return 0;
 }
 
@@ -111,8 +131,9 @@ xenon_stack_item vm_generate_bool(bool value){
     return item;
 }
 
-int vm_add_void_to_stack(xenon_stack_item *stack, int i){
-    stack[i].type = x_void;
+int vm_add_void_to_stack(xenon_stack_vector *stack){
+    vm_check_stack_size(stack);
+    stack->vector[stack->cursor++].type = x_void;
     return 0;
 }
 
@@ -122,9 +143,10 @@ xenon_stack_item vm_generate_void(){
     return item;
 }
 
-int vm_add_opcode_to_stack(xenon_stack_item *stack, int value, int i){
-    stack[i].type = x_opcode;
-    stack[i].data.anint = value;
+int vm_add_opcode_to_stack(xenon_stack_vector *stack, int value){
+    vm_check_stack_size(stack);
+    stack->vector[stack->cursor].type = x_opcode;
+    stack->vector[stack->cursor++].data.anint = value;
     return 0;
 }
 
@@ -135,13 +157,14 @@ xenon_stack_item vm_generate_opcode(int value){
     return item;
 }
 
-int vm_add_func_to_stack(xenon_stack_item *stack, int addr, int nargs, int nlocals, int xret_t, int xfunc_t, int i){
-    stack[i].type = x_function;
-    stack[i].data.func.addr = addr;
-    stack[i].data.func.nargs = nargs;
-    stack[i].data.func.nlocals = nlocals;
-    stack[i].data.func.xret_t = xret_t;
-    stack[i].data.func.xfunc_t = xfunc_t;
+int vm_add_func_to_stack(xenon_stack_vector *stack, int addr, int nargs, int nlocals, int xret_t, int xfunc_t){
+    vm_check_stack_size(stack);
+    stack->vector[stack->cursor].type = x_function;
+    stack->vector[stack->cursor].data.func.addr = addr;
+    stack->vector[stack->cursor].data.func.nargs = nargs;
+    stack->vector[stack->cursor].data.func.nlocals = nlocals;
+    stack->vector[stack->cursor].data.func.xret_t = xret_t;
+    stack->vector[stack->cursor++].data.func.xfunc_t = xfunc_t;
     return 0;
 }
 
@@ -156,6 +179,6 @@ xenon_stack_item vm_generate_func(int addr, int nargs, int nlocals, int xret_t, 
     return item;
 }
 
-int vm_get_type(xenon_stack_item *stack, int i){
-    return stack[i].type;
+int vm_get_type(xenon_stack_vector stack, int i){
+    return stack.vector[i].type;
 }

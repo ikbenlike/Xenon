@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #ifndef __VM_H_
-    #include "vm.h"
+    #include "vm/vm.h"
 #endif
 #ifndef __PARSER_H_
     #include "parser.h"
@@ -26,8 +26,9 @@ int repl(){
         free(b);
         if(ast != NULL){
             mpc_ast_print(ast);
-            xenon_stack_item *stack = calloc(1, 1000*sizeof(xenon_stack_item));
-            VM *vm = vm_create(stack, 1000, 0);
+            xenon_stack_vector stack;
+            stack.vector = calloc(1, 1000 * sizeof(xenon_stack_item));
+            VM *vm = vm_create(stack, 0);
             vm_free(vm);
             mpc_ast_delete(ast);
         }

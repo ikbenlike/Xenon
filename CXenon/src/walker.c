@@ -15,10 +15,10 @@
     #include "parser.h"
 #endif
 #ifndef __VM_H_
-    #include "vm.h"
+    #include "vm/vm.h"
 #endif
-#ifndef __TYPES_H_
-    #include "types.h"
+#ifndef __VM_UTILS_H_
+    #include "vm/vm_utils.h"
 #endif
 #ifndef __REPL_H_
     #include "repl.h"
@@ -39,23 +39,23 @@ int number_of_nodes(mpc_ast_t* tree){
     return 0;
 }
 
-int lexp_handler(mpc_ast_t node, xenon_stack_item* stack, int *stack_pointer){
+int lexp_handler(mpc_ast_t node, xenon_stack_vector stack){
     //int nodes_in_tree = number_of_nodes(*node.children);
     //printf("%d\n", *stack_pointer);
     if(node.children_num == 0){
         long int a = strtol(node.contents, NULL, 10);
-        vm_add_opcode_to_stack(stack, ICONST, *stack_pointer += 1);
-        vm_add_int_to_stack(stack, a, *stack_pointer += 1);
+        vm_add_opcode_to_stack(&stack, ICONST);
+        vm_add_int_to_stack(&stack, a);
     }
     for(int i = 0; i < node.children_num; i++){
         if(strcmp(node.children[i]->tag, "term|factor|number|regex") == 0){
             if(strstr(node.children[i]->contents, ".") == 0){
-                vm_add_opcode_to_stack(stack, FCONST, *stack_pointer += 1);
-                vm_add_float_to_stack(stack, strtof(node.children[i]->contents, NULL), *stack_pointer += 1);
+                vm_add_opcode_to_stack(&stack, FCONST);
+                vm_add_float_to_stack(&stack, strtof(node.children[i]->contents, NULL));
             }
             else {
-                vm_add_opcode_to_stack(stack, ICONST, *stack_pointer += 1);
-                vm_add_int_to_stack(stack, strtol(node.children[i]->contents, NULL, 10), *stack_pointer += 1);
+                vm_add_opcode_to_stack(&stack, ICONST);
+                vm_add_int_to_stack(&stack, strtol(node.children[i]->contents, NULL, 10));
             }
         }
         //else if(strcmp(node.children[i]->tag, ""))
@@ -63,18 +63,18 @@ int lexp_handler(mpc_ast_t node, xenon_stack_item* stack, int *stack_pointer){
     return 0;
 }
 
-int math_handler(mpc_ast_t node, xenon_stack_item *stack, int *stack_pointer){
+int math_handler(mpc_ast_t node, xenon_stack_vector stack){
     /*puts("math_handler");
     //mpc_ast_print(node.children[0]);
     //int nodes_in_tree = number_of_nodes(*node.children);
     if(node.children == NULL){
         puts("yes");
     }*/
-    lexp_handler(*node.children[0], stack, stack_pointer);
+    lexp_handler(*node.children[0], stack);
     return 0;
 }
 
-int function_handler(mpc_ast_t node, xenon_stack_item* stack, int *stack_pointer){
+int function_handler(mpc_ast_t node, xenon_stack_vector stack){
     int nodes_in_tree = number_of_nodes(*node.children);
     int narg = 0;
     int ret = x_void;
@@ -102,18 +102,17 @@ int function_handler(mpc_ast_t node, xenon_stack_item* stack, int *stack_pointer
     else if(strcmp(node.children[0]->contents, "void") == 0){
         ret = x_void;
     }
-    vm_add_func_to_stack(stack, 0, narg, 0, ret, x_native_t, *stack_pointer += 1);
+    vm_add_func_to_stack(&stack, 0, narg, 0, ret, x_native_t);
     return 0;
 }
 
-int tree_walker(mpc_ast_t* tree, xenon_stack_item* stack){
+int tree_walker(mpc_ast_t* tree, xenon_stack_vector stack){
     //puts("tree_walker");
-    int stack_pointer = 0;
     //printf("%d\n", stack_pointer);
     //xenon_stack_item* stack = calloc(1, DEFAULT_STACK_SIZE * sizeof(xenon_stack_item));
-    int nodes_in_tree = number_of_nodes(tree);
+    //int nodes_in_tree = number_of_nodes(tree);
     if(tree[0].children_num == 0){
-        vm_add_opcode_to_stack(stack, HALT, stack_pointer++);
+        vm_add_opcode_to_stack(&stack, HALT);
     }
     else{
         //puts("loop-1");
@@ -124,11 +123,11 @@ int tree_walker(mpc_ast_t* tree, xenon_stack_item* stack){
                 continue;
             }
             else if(strcmp(tree->children[i]->tag, "maths|>") == 0){
-                math_handler(*tree->children[i], stack, &stack_pointer);
+                math_handler(*tree->children[i], stack);
             }
         }
     }
-    vm_add_opcode_to_stack(stack, HALT, stack_pointer += 1);
+    vm_add_opcode_to_stack(&stack, HALT);
     //printf("%d\n", stack_pointer);
     return 0;
 }
@@ -139,7 +138,10 @@ int main(int argc, char **argv){
     }
     else {
         //puts("main");
-        xenon_stack_item *stack = calloc(1, 1000*sizeof(xenon_stack_item));
+        xenon_stack_vector stack;
+        stack.size = 1000;
+        stack.cursor = 0;
+        stack.vector = calloc(1, 1000 * sizeof(xenon_stack_item));
         char *a = calloc(1, 1000*sizeof(char));
         finput(a, argv[1], 1000*sizeof(char));
         printf("%s\n", a);
@@ -151,7 +153,7 @@ int main(int argc, char **argv){
         mpc_ast_print(ast);
         //puts(ast->children[1]->tag);
         tree_walker(ast, stack);
-        VM *vm = vm_create(stack, 1000, 0);
+        VM *vm = vm_create(stack, 0);
         mpc_ast_delete(ast);
         //printf("%s\n", vm_instructions[stack[0].data.anint].name);
         vm_exec(vm, 1, false);

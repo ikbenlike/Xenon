@@ -1,8 +1,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #ifndef __VM_H_
-    #include "../vm.h"
+    #include "../vm/vm.h"
 #endif
 #ifndef __HASHMAP_H_
     #include "hashmap.h"

@@ -100,7 +100,7 @@ typedef struct {
 
 
 
-static VM_INSTRUCTION vm_instructions[] = {
+/*static VM_INSTRUCTION vm_instructions[] = {
     { "noop",     0 },    // 0
     { "isub",     0 },    // 1
     { "imul",     0 },    // 2
@@ -174,7 +174,7 @@ static VM_INSTRUCTION vm_instructions[] = {
     { "store",    1 },
     { "const",    1 },
     { "halt",     0 }     // 68
-};
+};*/
 
 
 
@@ -219,7 +219,11 @@ typedef struct{
     } data;
 } xenon_stack_item;
 
-
+typedef struct {
+    int size;
+    int cursor;
+    xenon_stack_item *vector;
+} xenon_stack_vector;
 
 typedef struct {
     char *name;
@@ -237,22 +241,22 @@ typedef struct {
 
 
 typedef struct {
-    xenon_stack_item *code;
+    xenon_stack_vector code;
     int code_size;
 
-    xenon_stack_item *globals;
+    xenon_stack_vector globals;
     int nglobals;
 
-    xenon_stack_item stack[DEFAULT_STACK_SIZE];
+    xenon_stack_vector stack;
     Context call_stack[DEFAULT_CALL_STACK_SIZE];
 } VM;
 
 
 void vm_context_init(Context *ctx, int ip, int nlocals);
-VM *vm_create(xenon_stack_item *code, int code_size, int nglobals);
+VM *vm_create(xenon_stack_vector code, int nglobals);
 int vm_free(VM *vm);
-int vm_init(VM *vm, xenon_stack_item *code, int code_size, int nglobals);
+int vm_init(VM *vm, xenon_stack_vector code, int nglobals);
 int vm_exec(VM *vm, int startip, bool trace);
-int vm_print_instr(xenon_stack_item *code, int ip);
-int vm_print_stack(xenon_stack_item *stack, int count);
-int vm_print_data(xenon_stack_item *globals, int count);
+//int vm_print_instr(xenon_stack_vector code, int ip);
+//int vm_print_stack(xenon_stack_vector stack, int count);
+int vm_print_data(xenon_stack_vector globals, int count);
