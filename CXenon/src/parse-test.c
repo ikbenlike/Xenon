@@ -10,9 +10,9 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include "mpc/mpc.h"
-#include "parser.h"
-#include "preprocessor.h"
-#include "repl.h"
+#include "parser/parser.h"
+#include "preprocessor/preprocessor.h"
+#include "repl/repl.h"
 
 int main(int argc, char **argv){
     if (argc < 2){

@@ -1,3 +1,5 @@
 vgcore.*
 *.out
 *.txt
+*.pyc
+__pycache__

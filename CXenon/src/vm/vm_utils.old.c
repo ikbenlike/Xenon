@@ -61,9 +61,11 @@ int vm_check_stack_size(xenon_stack_vector *stack){
 }
 
 int vm_add_int_to_stack(xenon_stack_vector *stack, long int value){
-    vm_check_stack_size(stack);
+    //vm_check_stack_size(stack);
+    //printf("%d\n", stack->cursor);
     stack->vector[stack->cursor].type = x_integer;
     stack->vector[stack->cursor++].data.anint = value;
+    //printf("%i :: %li\n", stack->cursor, value);
     return 0;
 }
 
@@ -143,8 +145,8 @@ xenon_stack_item vm_generate_void(){
     return item;
 }
 
-int vm_add_opcode_to_stack(xenon_stack_vector *stack, int value){
-    vm_check_stack_size(stack);
+int vm_add_opcode_to_stack(xenon_stack_vector *stack, long int value){
+    //vm_check_stack_size(stack);
     stack->vector[stack->cursor].type = x_opcode;
     stack->vector[stack->cursor++].data.anint = value;
     return 0;
