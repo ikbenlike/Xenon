@@ -1,0 +1,67 @@
+// function notation
+
+func name(int a, int b) -> int {
+    return a * b;
+}
+
+// pure function notation
+
+pure func name2(int a, inb b) -> int {
+    return a * b;
+}
+
+// duck typed function notation
+
+dyn func name3(:a, :b) -> typeof(a) {
+    if(typeof(a) == typeof(b) == int){
+        return a + b;
+    }
+}
+
+// variable definition
+
+let thing = 10;
+thing := 10;
+int thing = 10;
+
+// namespace definition
+
+namespace x {
+    func thing -> int {
+        return 25;
+    }
+}
+
+// namespace usage
+
+x.thing();
+
+func -> int thing = x.thing;
+
+// array definition 
+
+array(int) a = {10, 20, 30};
+
+array(let) a = {20, "no", 1.5};
+
+array(str, int) a = {20, "yes"};
+
+// types (classes)
+
+type T {
+    n := 40;
+    func nget -> int {
+        return n;
+    }
+}
+
+// type usage
+
+T a = T();
+
+x := a.nget();
+
+// type casting
+
+int a = 40;
+cast float a;
