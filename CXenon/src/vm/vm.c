@@ -31,7 +31,7 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
     while(1){
         ip++;
         switch(opcode){
-            case CONST:
+            case PUSH:
                 stack.stack[++sp] = code.stack[ip++];
                 break;
 
@@ -47,9 +47,30 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
                 stack.stack[++sp].integer = a - b;
             }
                 break;
+            case IMUL: {
+                int b = stack.stack[sp--].integer;
+                int a = stack.stack[sp--].integer;
+                stack.stack[++sp].integer = a * b;
+            }
+                break;
+            case IDIV: {
+                int b = stack.stack[sp--].integer;
+                int a = stack.stack[sp--].integer;
+                stack.stack[++sp].integer = a / b;
+            }
+                break;
+            case IMOD: {
+                int b = stack.stack[sp--].integer;
+                int a = stack.stack[sp--].integer;
+                stack.stack[++sp].integer = a % b;
+            }
+                break;
 
             case IPRINT:
                 printf("%d", stack.stack[sp--].integer);
+                break;
+            case IPRINTLN:
+                printf("%d\n", stack.stack[sp--].integer);
                 break;
 
             case HALT:
@@ -60,4 +81,20 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
     }
 
     return 0;
+}
+
+
+/*
+    int xenon_vm_wrapper(xenon_vm *vm);
+
+    This function takes a pointer to a `xenon_vm` struct and 
+    runs the `xenon_vm_exec` function with the data provided by 
+    the struct.
+
+    Return type:
+    non-zero at errors; otherwise zero is returned. 
+*/
+
+int xenon_vm_wrapper(xenon_vm_t *vm){
+    return xenon_vm_exec(vm->code, vm->stack, vm->startip);
 }
