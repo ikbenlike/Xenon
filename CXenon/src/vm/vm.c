@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 #include "vm.h"
-//#include "vm_utils.h"
+#include "vm_utils.h"
 
 
 
@@ -66,11 +67,75 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
             }
                 break;
 
+            case FADD: {
+                float b = stack.stack[sp--].floating;
+                float a = stack.stack[sp--].floating;
+                stack.stack[++sp].integer = a + b;
+            }
+                break;
+            case FSUB: {
+                float b = stack.stack[sp--].floating;
+                float a = stack.stack[sp--].floating;
+                stack.stack[++sp].floating = a - b;
+            }
+                break;
+            case FMUL: {
+                float b = stack.stack[sp--].floating;
+                float a = stack.stack[sp--].floating;
+                stack.stack[++sp].floating = a * b;
+            }
+                break;
+            case FDIV: {
+                float b = stack.stack[sp--].floating;
+                float a = stack.stack[sp--].floating;
+                stack.stack[++sp].floating = a / b;
+            }
+                break;
+            case FMOD: {
+                float b = stack.stack[sp--].floating;
+                float a = stack.stack[sp--].floating;
+                stack.stack[++sp].floating = fmodf(a, b);
+            }
+                break;
+
+            case SADD: {
+                xenon_string_t b = stack.stack[sp--].string;
+                xenon_string_t a = stack.stack[sp--].string;
+                xenon_string_t x;
+                //printf("%d\n", b.len);
+                //printf("%d\n", a.len);
+                x.len = a.len + b.len + 1;
+                //printf("%d\n", x.len);
+                x.contents = calloc(1, x.len * sizeof(char));
+                if(x.contents == NULL){
+                    puts("rip");
+                }
+                strncpy(x.contents, a.contents, a.len);
+                //printf(x.contents);
+                //printf("%s\n", x.contents);
+                strncat(x.contents + a.len, b.contents, b.len);
+                stack.stack[++sp].string = x;
+            }
+                break;
+
             case IPRINT:
                 printf("%d", stack.stack[sp--].integer);
                 break;
             case IPRINTLN:
                 printf("%d\n", stack.stack[sp--].integer);
+                break;
+            case FPRINT:
+                printf("%f", stack.stack[sp--].floating);
+                break;
+            case FPRINTLN:
+                printf("%f\n", stack.stack[sp--].floating);
+                break;
+            case SPRINT:
+                xenon_print_xstring(stack.stack[sp--].string);
+                break;
+            case SPRINTLN:
+                xenon_print_xstring(stack.stack[sp--].string);
+                putchar('\n');
                 break;
 
             case HALT:

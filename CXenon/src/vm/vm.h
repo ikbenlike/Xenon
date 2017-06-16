@@ -10,14 +10,25 @@
         IMUL,
         IDIV,
         IMOD,
+        FADD,
+        FSUB,
+        FMUL,
+        FDIV,
+        FMOD,
+        SADD,
+        SPRINT,
+        SPRINTLN,
         IPRINT,
         IPRINTLN,
+        FPRINT,
+        FPRINTLN,
         HALT
     };
 
     enum xenon_variable_types {
         opcode,
         integer,
+        floating,
         boolean,
         character,
         string
@@ -33,6 +44,7 @@
         union {
             int opcode;
             int integer;
+            float floating;
             bool boolean;
             char character;
             xenon_string_t string;
