@@ -19,14 +19,16 @@
 */
 
 
-int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
+int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip, xenon_context_t *cstack){
     int jmp_addr;   // the address to jump to for function execution
     int ret_addr;   // the address to return to after function execution
-    int ip;     // instruction pointer
-    int sp;     // stack pointer
+    int ip;         // instruction pointer
+    int sp;         // stack pointer
+    int csp;        // callstack pointer
 
     ip = startip;
     sp = 0;
+    csp = 0;
     int opcode = code.stack[ip].opcode; // get the first opcode
 
     while(1){
@@ -64,6 +66,18 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
                 int b = stack.stack[sp--].integer;
                 int a = stack.stack[sp--].integer;
                 stack.stack[++sp].integer = a % b;
+            }
+                break;
+            case IEQ: {
+                int b = stack.stack[sp--].integer;
+                int a = stack.stack[sp--].integer;
+                stack.stack[++sp].boolean = a == b;
+            }
+                break;
+            case INEQ: {
+                int b = stack.stack[sp--].integer;
+                int a = stack.stack[sp--].integer;
+                stack.stack[++sp].boolean = a != b;
             }
                 break;
 
@@ -118,6 +132,43 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
             }
                 break;
 
+            case BADD: {
+                    bool b = stack.stack[sp--].boolean;
+                    bool a = stack.stack[sp--].boolean;
+                    stack.stack[sp++].integer = a + b;
+                }
+                    break;
+            case BSUB: {
+                    bool b = stack.stack[sp--].boolean;
+                    bool a = stack.stack[sp--].boolean;
+                    stack.stack[sp++].integer = a - b;
+                }
+                    break;
+            case BMUL: {
+                    bool b = stack.stack[sp--].boolean;
+                    bool a = stack.stack[sp--].boolean;
+                    stack.stack[sp++].integer = a * b;
+                }
+                    break;
+            case BDIV: {
+                    bool b = stack.stack[sp--].boolean;
+                    bool a = stack.stack[sp--].boolean;
+                    stack.stack[sp++].integer = a / b;
+                }
+                    break;
+            case BEQ: {
+                    bool b = stack.stack[sp--].boolean;
+                    bool a = stack.stack[sp--].boolean;
+                    stack.stack[sp++].boolean = a == b;
+                }
+                    break;
+            case BNEQ: {
+                    bool b = stack.stack[sp--].boolean;
+                    bool a = stack.stack[sp--].boolean;
+                    stack.stack[sp++].boolean = a != b;
+                }
+                    break;
+
             case IPRINT:
                 printf("%d", stack.stack[sp--].integer);
                 break;
@@ -137,10 +188,41 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
                 xenon_print_xstring(stack.stack[sp--].string);
                 putchar('\n');
                 break;
+            case BPRINT: {
+                    bool a = stack.stack[sp--].boolean;
+                    printf(a ? "true" : "false");
+                }
+                    break;
+            case BPRINTLN: {
+                    bool a = stack.stack[sp--].boolean;
+                    puts(a ? "true" : "false");
+                }
+
+
+            case CALL: {
+                int addr = code.stack[ip].func.addr;
+                cstack[csp].ret = ip;
+                cstack[csp].locals = calloc(code.stack[ip].func.nlocals + code.stack[ip].func.nargs, sizeof(xenon_stack_item_t));
+                for(int i = 0; i < code.stack[ip].func.nargs; i++){
+                    cstack[csp].locals[i] = stack.stack[sp-i];
+                }
+                sp -= code.stack[ip].func.nargs;
+                ip = addr;
+            }
+                break;
+
+            case RET:
+                ip = cstack[csp].ret + 1;
+                csp--;
+                break;
 
             case HALT:
                 return 0;
                 break;
+
+            default:
+                fprintf(stderr, "Xenon: invalid opcode %d\n", opcode);
+                return opcode;
         }
         opcode = code.stack[ip].opcode;
     }
@@ -160,6 +242,6 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip) {
     non-zero at errors; otherwise zero is returned. 
 */
 
-int xenon_vm_wrapper(xenon_vm_t *vm){
-    return xenon_vm_exec(vm->code, vm->stack, vm->startip);
+int xenon_vm_exec_wrapper(xenon_vm_t *vm){
+    return xenon_vm_exec(vm->code, vm->stack, vm->startip, vm->ctx);
 }
