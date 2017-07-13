@@ -94,7 +94,7 @@ void xenon_stack_append(xenon_stack_t *stack, xenon_stack_item_t item){
     stack->stack[stack->cursor++] = item;
     if((stack->cursor / stack->len) * 100 > 80){
         printf("%d\n", (int)(stack->len * 1.75));
-        void *tmp = realloc(stack->stack, (int)(stack->len * 1.75));
+        void *tmp = realloc(stack->stack, (int)(stack->len * 1.75) * sizeof(xenon_stack_item_t));
         if(tmp == NULL){
             puts("Xenon: invalid stack resize");
             return;
