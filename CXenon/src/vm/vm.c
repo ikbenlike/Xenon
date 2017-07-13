@@ -210,10 +210,23 @@ int xenon_vm_exec(xenon_stack_t code, xenon_stack_t stack, int startip, xenon_co
                 ip = addr;
             }
                 break;
-
             case RET:
                 ip = cstack[csp].ret + 1;
                 csp--;
+                break;
+
+            case JMP:
+                ip = code.stack[ip++].integer;
+                break;
+            case BRT:
+                if(stack.stack[sp--].boolean == true){
+                    ip = code.stack[ip++].integer;
+                }
+                break;
+            case BRF:
+                if(stack.stack[sp--].boolean == false){
+                    ip = code.stack[ip++].integer;
+                }
                 break;
 
             case HALT:

@@ -4,7 +4,7 @@
 #include "vm_utils.h"
 
 int main(int argc, char **argv){
-    xenon_vm_t *vm = xenon_vm_generate(0, 70, 70, 70);
+    xenon_vm_t *vm = xenon_vm_generate(0, 100, 100, 100);
     xenon_stack_append(&vm->code, xenon_opcode_generate(PUSH));
     xenon_stack_append(&vm->code, xenon_int_generate(4));
     xenon_stack_append(&vm->code, xenon_opcode_generate(PUSH));
@@ -46,6 +46,15 @@ int main(int argc, char **argv){
     xenon_stack_append(&vm->code, xenon_opcode_generate(PUSH));
     xenon_stack_append(&vm->code, xenon_string_generate("World!"));
     xenon_stack_append(&vm->code, xenon_opcode_generate(SADD));
+    xenon_stack_append(&vm->code, xenon_opcode_generate(SPRINTLN));
+    xenon_stack_append(&vm->code, xenon_opcode_generate(PUSH));
+    xenon_stack_append(&vm->code, xenon_bool_generate(1 == 1));
+    xenon_stack_append(&vm->code, xenon_opcode_generate(BRT));
+    xenon_stack_append(&vm->code, xenon_int_generate(vm->code.cursor + 1));
+    xenon_stack_append(&vm->code, xenon_opcode_generate(JMP));
+    xenon_stack_append(&vm->code, xenon_int_generate(vm->code.cursor + 4));
+    xenon_stack_append(&vm->code, xenon_opcode_generate(PUSH));
+    xenon_stack_append(&vm->code, xenon_string_generate("This shouldn't print"));
     xenon_stack_append(&vm->code, xenon_opcode_generate(SPRINTLN));
     xenon_stack_append(&vm->code, xenon_opcode_generate(CALL));
     xenon_stack_append(&vm->code, xenon_func_generate(0, 1, vm->code.cursor + 2));

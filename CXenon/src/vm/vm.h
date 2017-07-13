@@ -34,6 +34,9 @@
         BPRINTLN,
         CALL,
         RET,
+        JMP,
+        BRT,
+        BRF,
         HALT
     };
 
