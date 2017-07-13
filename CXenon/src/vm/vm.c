@@ -13,6 +13,8 @@
 
     This function runs the VM using the provided `stack` and `code`,
     where `code` contains the data and where `stack` is empty.
+    `cstack` is the callstack, which contains the return addresses of the
+    functions the VM is executing.
 
     The `startip` parameter sets where in the `code` the VM should start 
     executing. 

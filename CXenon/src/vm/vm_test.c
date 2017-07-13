@@ -4,7 +4,7 @@
 #include "vm_utils.h"
 
 int main(int argc, char **argv){
-    xenon_vm_t *vm = xenon_vm_generate(0, 100, 100, 100);
+    xenon_vm_t *vm = xenon_vm_generate(0, 70, 70, 100);
     xenon_stack_append(&vm->code, xenon_opcode_generate(PUSH));
     xenon_stack_append(&vm->code, xenon_int_generate(4));
     xenon_stack_append(&vm->code, xenon_opcode_generate(PUSH));
